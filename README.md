@@ -179,8 +179,8 @@ does not establish live service behavior on a device.
 
 Separate loopback checks exercised WebSocket echo, remote close, connection cancellation,
 and file storage in headless Windows and Linux x64 Mono players. The Linux run used Ubuntu
-on WSL2. A Chromium fixture exercised callback URL cleanup, browser storage, and the
-WebSocket bridge. An EditMode test simulated focus return and verified session refresh.
+on WSL2. The WebGL smoke player loaded in Chromium. A separate browser fixture exercised
+callback URL cleanup, browser storage, and the WebSocket bridge. An EditMode test simulated focus return and verified session refresh.
 These results cover the listed behaviors with fixtures. Android and iOS device behavior
 and live Supabase service behavior require separate checks.
 
