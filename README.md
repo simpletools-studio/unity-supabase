@@ -8,9 +8,9 @@ An independent Supabase client for Unity 2021.3 and newer, with Auth, Database, 
 Storage, and Edge Functions APIs for WebGL, desktop, and mobile projects.
 
 <p align="center">
-  <a href="https://github.com/DorukTan/unity-supabase/releases/tag/v0.5.0"><img alt="Release" src="https://img.shields.io/badge/release-0.5.0-3ecf8e" /></a>
-  <a href="https://github.com/DorukTan/unity-supabase/releases/download/v0.5.0/com.supabaseunity.client-0.5.0.unitypackage"><img alt="Download unitypackage" src="https://img.shields.io/badge/download-.unitypackage-3ecf8e?logo=unity&amp;logoColor=white" /></a>
-  <a href="https://github.com/DorukTan/unity-supabase/actions/workflows/package-checks.yml"><img alt="Package checks" src="https://github.com/DorukTan/unity-supabase/actions/workflows/package-checks.yml/badge.svg" /></a>
+  <a href="https://github.com/simpletools-studio/unity-supabase/releases/tag/v0.5.0"><img alt="Release" src="https://img.shields.io/badge/release-0.5.0-3ecf8e" /></a>
+  <a href="https://github.com/simpletools-studio/unity-supabase/releases/download/v0.5.0/com.supabaseunity.client-0.5.0.unitypackage"><img alt="Download unitypackage" src="https://img.shields.io/badge/download-.unitypackage-3ecf8e?logo=unity&amp;logoColor=white" /></a>
+  <a href="https://github.com/simpletools-studio/unity-supabase/actions/workflows/package-checks.yml"><img alt="Package checks" src="https://github.com/simpletools-studio/unity-supabase/actions/workflows/package-checks.yml/badge.svg" /></a>
   <img alt="Unity" src="https://img.shields.io/badge/Unity-2021.3%20to%206-222222?logo=unity" />
   <a href="LICENSE.md"><img alt="License" src="https://img.shields.io/badge/license-MIT-blue" /></a>
 </p>
@@ -25,11 +25,11 @@ In Unity 2021.3 or 2022.3, open **Window > Package Manager**. In Unity 6, open
 **Window > Package Management > Package Manager**. Select **Add package from git URL**:
 
 ```text
-https://github.com/DorukTan/unity-supabase.git?path=/Packages/com.supabaseunity.client#v0.5.0
+https://github.com/simpletools-studio/unity-supabase.git?path=/Packages/com.supabaseunity.client#v0.5.0
 ```
 
 UPM installs the Newtonsoft Json.NET dependency automatically. The
-[release page](https://github.com/DorukTan/unity-supabase/releases/tag/v0.5.0) also provides:
+[release page](https://github.com/simpletools-studio/unity-supabase/releases/tag/v0.5.0) also provides:
 
 - A `.tgz` for **Package Manager > Add package from tarball**.
 - A `.unitypackage` for **Assets > Import Package > Custom Package**. Install
@@ -186,7 +186,7 @@ the Unity suite, clean import, and platform builds. Tagged release archives must
 hashes in the attached verification record. See [RELEASING.md](RELEASING.md).
 
 To report live testing, open a
-[platform report](https://github.com/DorukTan/unity-supabase/issues/new?template=platform_report.yml)
+[platform report](https://github.com/simpletools-studio/unity-supabase/issues/new?template=platform_report.yml)
 with the package/Unity version, OS or device, exercised services, and sanitized results.
 
 ## Security and session storage
@@ -200,7 +200,7 @@ Session persistence is off by default. Read the
 before enabling it. Native file persistence is unencrypted; use a custom `ISessionStore`
 when your application requires operating-system credential protection.
 
-Report vulnerabilities through [private reporting](https://github.com/DorukTan/unity-supabase/security/advisories/new).
+Report vulnerabilities through [private reporting](https://github.com/simpletools-studio/unity-supabase/security/advisories/new).
 Do not include credentials in issues or logs.
 
 ## Documentation
