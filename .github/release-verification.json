@@ -1,12 +1,12 @@
 {
   "schemaVersion": 2,
-  "packageVersion": "0.4.0",
-  "verifiedAtUtc": "2026-11-04T08:38:28Z",
+  "packageVersion": "0.5.0",
+  "verifiedAtUtc": "2026-11-04T12:59:09Z",
   "unity": {
     "editorVersion": "6000.6.7f1",
     "editModeTests": {
-      "total": 153,
-      "passed": 153,
+      "total": 162,
+      "passed": 162,
       "failed": 0,
       "skipped": 0,
       "inconclusive": 0
@@ -20,7 +20,7 @@
     }
   },
   "archives": {
-    "com.supabaseunity.client-0.4.0.tgz": "403d36ad42f3d3861aca9e6b95fcb6fd4e898dd88d58ba4c0b38b6a1567f3758",
-    "com.supabaseunity.client-0.4.0.unitypackage": "c656b5c357dd39b285f07b46d1d822edde85554ff7745d7d3731cf0b12adc69c"
+    "com.supabaseunity.client-0.5.0.tgz": "3361bb4c63f3c47fccea51f898e72c3a1711a2e0ca8b1a0976232f9c6336420d",
+    "com.supabaseunity.client-0.5.0.unitypackage": "c45f3b9756781c7c19f95f524266ac905f993662ba3fa1f18914221b9fb295c9"
   }
 }
