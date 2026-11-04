@@ -17,13 +17,21 @@ namespace Supabase.Unity.Tests
     public sealed class ModelGeneratorTests
     {
         [Test]
+        public void ModelGeneration_SecretIsExcludedFromEditorSerialization()
+        {
+            var key = typeof(SupabaseModelGeneratorWindow).GetField("secretApiKey",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.IsTrue(key.IsNotSerialized);
+        }
+
+        [Test]
         public void ModelGeneration_MissingSecretGivesReadableGuidance()
         {
             var window = ScriptableObject.CreateInstance<SupabaseModelGeneratorWindow>();
             try
             {
                 Set(window, "projectUrl", "https://example.supabase.co");
-                var task = window.GenerateModelsAsync();
+                var task = window.FetchPreviewAsync();
                 Assert.IsTrue(task.IsCompleted);
                 Assert.IsFalse(task.IsFaulted);
                 StringAssert.Contains("Enter a secret API key", Get<string>(window, "status"));
@@ -136,7 +144,7 @@ namespace Supabase.Unity.Tests
                 var folder = Get<string>(window, "outputFolder");
                 try
                 {
-                    var task = window.GenerateModelsAsync();
+                    var task = window.FetchPreviewAsync();
                     yield return Received(fixture);
                     UnityEngine.Object.DestroyImmediate(window);
                     release.Set();
@@ -164,16 +172,19 @@ namespace Supabase.Unity.Tests
                 var folder = Get<string>(window, "outputFolder");
                 try
                 {
-                    var cancelled = window.GenerateModelsAsync();
+                    var cancelled = window.FetchPreviewAsync();
                     window.CancelGeneration();
                     yield return Await(cancelled);
                     Assert.AreEqual("Cancelled.", Get<string>(window, "status"));
                     Assert.IsFalse(Directory.Exists(folder));
                     Set(window, "secretApiKey", "sb_secret_editor-test-only");
-                    yield return Await(window.GenerateModelsAsync());
+                    yield return Await(window.FetchPreviewAsync());
+                    Assert.IsFalse(Directory.Exists(folder));
+                    StringAssert.StartsWith("1 to create", Get<string>(window, "status"));
+                    window.ApplyPreview();
                     Assert.IsTrue(File.Exists(Path.Combine(folder, "Scores.cs")));
                     Assert.IsFalse(Get<bool>(window, "generating"));
-                    StringAssert.StartsWith("Generated 1", Get<string>(window, "status"));
+                    StringAssert.StartsWith("Wrote 1", Get<string>(window, "status"));
                 }
                 finally
                 {
@@ -184,7 +195,7 @@ namespace Supabase.Unity.Tests
         }
 
         [UnityTest]
-        public IEnumerator ModelGeneration_CapturesDestinationBeforeRequest()
+        public IEnumerator ModelGeneration_RejectsConfigurationChangedDuringRequest()
         {
             using (var release = new ManualResetEventSlim())
             using (var fixture = new LoopbackSupabaseFixture(delegate
@@ -198,14 +209,15 @@ namespace Supabase.Unity.Tests
                 var changedFolder = folder + "Changed~";
                 try
                 {
-                    var task = window.GenerateModelsAsync();
+                    var task = window.FetchPreviewAsync();
                     yield return Received(fixture);
                     Set(window, "outputFolder", changedFolder);
                     Set(window, "generatedNamespace", "Changed.Namespace");
                     release.Set();
                     yield return Await(task);
-                    var source = File.ReadAllText(Path.Combine(folder, "Scores.cs"));
-                    StringAssert.Contains("namespace Game.Database", source);
+                    StringAssert.Contains("configuration changed", Get<string>(window, "status"));
+                    window.ApplyPreview();
+                    Assert.IsFalse(Directory.Exists(folder));
                     Assert.IsFalse(Directory.Exists(changedFolder));
                 }
                 finally
@@ -214,6 +226,132 @@ namespace Supabase.Unity.Tests
                     UnityEngine.Object.DestroyImmediate(window);
                     RemoveTestFolder(folder);
                     RemoveTestFolder(changedFolder);
+                }
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator ModelGeneration_RequiresReviewAfterDestinationChanges()
+        {
+            using (var fixture = new LoopbackSupabaseFixture(delegate { return SchemaResponse(); }))
+            {
+                var window = Generator(fixture);
+                var folder = Get<string>(window, "outputFolder");
+                var destination = Path.Combine(folder, "Scores.cs");
+                try
+                {
+                    yield return Await(window.FetchPreviewAsync());
+                    Directory.CreateDirectory(folder);
+                    const string manualSource = "// handwritten";
+                    File.WriteAllText(destination, manualSource);
+                    window.ApplyPreview();
+                    Assert.AreEqual(manualSource, File.ReadAllText(destination));
+                    StringAssert.Contains("Refusing to overwrite", Get<string>(window, "status"));
+
+                    Set(window, "secretApiKey", "sb_secret_editor-test-only");
+                    yield return Await(window.FetchPreviewAsync());
+                    StringAssert.Contains("blocked destinations", Get<string>(window, "status"));
+                    window.ApplyPreview();
+                    Assert.AreEqual(manualSource, File.ReadAllText(destination));
+                }
+                finally
+                {
+                    UnityEngine.Object.DestroyImmediate(window);
+                    RemoveTestFolder(folder);
+                }
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator ModelGeneration_UpdatesGeneratedFileAndSkipsIdenticalOutput()
+        {
+            using (var fixture = new LoopbackSupabaseFixture(delegate { return SchemaResponse(); }))
+            {
+                var window = Generator(fixture);
+                var folder = Get<string>(window, "outputFolder");
+                var destination = Path.Combine(folder, "Scores.cs");
+                try
+                {
+                    yield return Await(window.FetchPreviewAsync());
+                    window.ApplyPreview();
+                    var source = File.ReadAllText(destination);
+                    File.AppendAllText(destination, "// local edit");
+                    File.WriteAllText(destination + ".meta", "test metadata");
+
+                    Set(window, "secretApiKey", "sb_secret_editor-test-only");
+                    yield return Await(window.FetchPreviewAsync());
+                    StringAssert.Contains("1 to update", Get<string>(window, "status"));
+                    Assert.AreEqual(source + "// local edit", File.ReadAllText(destination));
+                    window.ApplyPreview();
+                    Assert.AreEqual(source, File.ReadAllText(destination));
+                    Assert.AreEqual("test metadata", File.ReadAllText(destination + ".meta"));
+
+                    Set(window, "secretApiKey", "sb_secret_editor-test-only");
+                    yield return Await(window.FetchPreviewAsync());
+                    StringAssert.Contains("1 unchanged", Get<string>(window, "status"));
+                    var timestamp = File.GetLastWriteTimeUtc(destination);
+                    window.ApplyPreview();
+                    Assert.AreEqual(timestamp, File.GetLastWriteTimeUtc(destination));
+                }
+                finally
+                {
+                    UnityEngine.Object.DestroyImmediate(window);
+                    RemoveTestFolder(folder);
+                }
+            }
+        }
+
+        [TestCase("{\"player_name\":{\"type\":\"string\"},\"player-name\":{\"type\":\"string\"}}", "already used")]
+        [TestCase("{\"scores\":{\"type\":\"string\"}}", "already used")]
+        [TestCase("{\"id\":{\"$ref\":\"#/definitions/id\"}}", "Unsupported schema type")]
+        [TestCase("{\"id\":{\"type\":\"array\"}}", "Missing array item schema")]
+        public void GenerateModel_RejectsUnsupportedColumns(string properties, string message)
+        {
+            var definition = JObject.Parse("{\"properties\":" + properties + "}");
+            var error = Assert.Throws<InvalidOperationException>(() =>
+                SupabaseModelGeneratorWindow.GenerateModel("scores", "Scores", definition, "Game.Database"));
+            StringAssert.Contains(message, error.Message);
+        }
+
+        [Test]
+        public void GenerateModel_HandlesPostgrestFormats()
+        {
+            var definition = JObject.Parse(@"{
+                ""required"": [""id""],
+                ""properties"": {
+                    ""id"": {""type"": ""integer"", ""format"": ""bigint""},
+                    ""payload"": {""format"": ""jsonb""},
+                    ""changes"": {""type"": ""array"", ""format"": ""jsonb[]"", ""items"": {}},
+                    ""ids"": {""type"": ""array"", ""format"": ""uuid[]"", ""items"": {""type"": ""string""}}
+                }
+            }");
+            var generated = SupabaseModelGeneratorWindow.GenerateModel("events", "Events", definition, "Game.Database");
+            StringAssert.Contains("public long Id", generated);
+            StringAssert.Contains("public global::Newtonsoft.Json.Linq.JToken Payload", generated);
+            StringAssert.Contains("List<global::Newtonsoft.Json.Linq.JToken> Changes", generated);
+            StringAssert.Contains("List<global::System.Guid> Ids", generated);
+        }
+
+        [UnityTest]
+        public IEnumerator ModelGeneration_DoesNotShowSchemaErrorBody()
+        {
+            using (var fixture = new LoopbackSupabaseFixture(delegate
+            {
+                return ContractHttpResponse.Json(403, "{\"message\":\"private response text\"}");
+            }))
+            {
+                var window = Generator(fixture);
+                try
+                {
+                    yield return Await(window.FetchPreviewAsync());
+                    var status = Get<string>(window, "status");
+                    StringAssert.Contains("HTTP 403", status);
+                    StringAssert.DoesNotContain("private response text", status);
+                    Assert.AreEqual(string.Empty, Get<string>(window, "secretApiKey"));
+                }
+                finally
+                {
+                    UnityEngine.Object.DestroyImmediate(window);
                 }
             }
         }
@@ -337,9 +475,8 @@ namespace Supabase.Unity.Tests
             var generated = SupabaseModelGeneratorWindow.GenerateModel(
                 "scores", "ScoreRow", definition, "Game.Database");
 
-            StringAssert.Contains("using UnityEngine.Scripting;", generated);
-            StringAssert.Contains("[Preserve]", generated);
-            StringAssert.Contains("[SupabaseTable(\"scores\")]", generated);
+            StringAssert.Contains("[global::UnityEngine.Scripting.PreserveAttribute]", generated);
+            StringAssert.Contains("[global::Supabase.Unity.SupabaseTableAttribute(\"scores\")]", generated);
         }
 
         [Test]

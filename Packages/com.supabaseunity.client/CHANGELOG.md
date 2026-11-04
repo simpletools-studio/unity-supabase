@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.5.0] - 2026-11-04
+
+### Added
+
+- Review new, updated, unchanged, and blocked model files before applying a schema preview.
+  For updates, the preview shows the current and proposed C# source.
+- Open the Model Generator with the project URL selected in Setup.
+
+### Fixed
+
+- Map PostgREST bigint and JSON columns to C# types that can hold their values.
+- Block conflicting C# names, unsupported column schemas, and unsafe output destinations.
+- Recheck destinations before writing, skip identical output, and preserve Unity metadata.
+- Keep the schema key out of Editor reload data and response bodies out of HTTP errors.
+- Clear custom-host consent when the project URL changes.
+
 ## [0.4.0] - 2026-11-03
 
 ### Changed

@@ -2,7 +2,7 @@
 
 Bu paket Unity 2021.3 LTS ile Unity 6 arasında aynı API ile Auth, Database, Realtime, Storage ve Edge Functions kullanmak için Unity’ye özgü bir istemci sağlar. WebGL’de tarayıcı WebSocket köprüsünü kullanır; diğer platformlarda native WebSocket kullanır. Oturum kalıcılığı varsayılan olarak kapalıdır. Açıldığında oturumlar WebGL’de `localStorage`, diğer platformlarda `persistentDataPath` altında saklanır.
 
-> `0.4.0`, kurulum ekranını ve Quickstart gezinmesini iyileştirir. `0.2.0` çalışma zamanı API'si
+> `0.5.0`, Model Generator ekranına dosya önizlemesi ekler. `0.2.0` çalışma zamanı API'si
 > ve [Editor betikleri](Documentation~/editor-scripting.md) desteği korunur. Yükseltmeden önce
 > [değişiklik günlüğünü](CHANGELOG.md) kontrol et.
 
@@ -11,7 +11,7 @@ Bu paket Unity 2021.3 LTS ile Unity 6 arasında aynı API ile Auth, Database, Re
 Package Manager’da **Add package from git URL** seçeneğine şunu gir:
 
 ```text
-https://github.com/DorukTan/unity-supabase.git?path=/Packages/com.supabaseunity.client#v0.4.0
+https://github.com/DorukTan/unity-supabase.git?path=/Packages/com.supabaseunity.client#v0.5.0
 ```
 
 Ardından **Tools > Supabase > Setup** ekranını açıp ayar dosyasını oluştur. Supabase Dashboard’daki **Connect** ekranından proje URL’sini ve `sb_publishable_...` anahtarını al, sonra **Test Project Connection** düğmesine bas. Bu test bağlantıyı ve anahtarı kontrol eder; RLS kurallarını değiştirmez. Eski `anon` JWT anahtarları da desteklenir.
@@ -98,6 +98,17 @@ sorar; **Cancel** mevcut sahneyi açık bırakır. Play modunda sahne açma dü�
 Eski bir örnek kopyasında sahne yoksa `SupabaseQuickstart` bileşenini bir GameObject’e ekleyip
 ayar dosyasını atayabilirsin. Birden çok örnek kopyası varsa Setup, kullandığı yolu gösterir.
 Bir sorun yaşarsan [hata rehberinden](Documentation~/troubleshooting.md) başlayabilirsin.
+
+## C# modelleri oluşturma
+
+1. **Tools > Supabase > Model Generator** ekranını aç. Setup üzerinden açarsan orada seçili ayar dosyasının proje URL'si kullanılır.
+2. **Secret Key (Editor only)** alanına Supabase gizli API anahtarını gir. `Assets` altında bir çıktı klasörü ve bir ad alanı seç. İstek, Data API'nin varsayılan şemasını kullanır.
+3. **Fetch Schema and Preview** düğmesine bas. **Model File** listesinden bir dosya seçip önerilen kodu incele. Güncellemelerde **Current Source** bölümünden mevcut kodu karşılaştır.
+4. Önizlemedeki değişiklikleri yazmak için **Apply Changes** düğmesine bas. Araç Unity meta dosyalarını korur, içeriği aynı olan dosyaları atlar ve şemadan kaldırılan tabloların dosyalarını silmez.
+
+Hedefte elle yazılmış bir dosya varsa dosyayı taşı veya yeniden adlandır ve şemayı tekrar getir.
+İnceleme sırasında bir hedef dosya değişirse uygulamadan önce yeni önizleme al. Gizli anahtar istek
+tamamlandığında temizlenir ve ayar dosyasına kaydedilmez.
 
 ## Play modu dışında Editor betikleri
 

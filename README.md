@@ -8,15 +8,15 @@ An independent Supabase client for Unity 2021.3 and newer, with Auth, Database, 
 Storage, and Edge Functions APIs for WebGL, desktop, and mobile projects.
 
 <p align="center">
-  <a href="https://github.com/DorukTan/unity-supabase/releases/tag/v0.4.0"><img alt="Release" src="https://img.shields.io/badge/release-0.4.0-3ecf8e" /></a>
-  <a href="https://github.com/DorukTan/unity-supabase/releases/download/v0.4.0/com.supabaseunity.client-0.4.0.unitypackage"><img alt="Download unitypackage" src="https://img.shields.io/badge/download-.unitypackage-3ecf8e?logo=unity&amp;logoColor=white" /></a>
+  <a href="https://github.com/DorukTan/unity-supabase/releases/tag/v0.5.0"><img alt="Release" src="https://img.shields.io/badge/release-0.5.0-3ecf8e" /></a>
+  <a href="https://github.com/DorukTan/unity-supabase/releases/download/v0.5.0/com.supabaseunity.client-0.5.0.unitypackage"><img alt="Download unitypackage" src="https://img.shields.io/badge/download-.unitypackage-3ecf8e?logo=unity&amp;logoColor=white" /></a>
   <a href="https://github.com/DorukTan/unity-supabase/actions/workflows/package-checks.yml"><img alt="Package checks" src="https://github.com/DorukTan/unity-supabase/actions/workflows/package-checks.yml/badge.svg" /></a>
   <img alt="Unity" src="https://img.shields.io/badge/Unity-2021.3%20to%206-222222?logo=unity" />
   <a href="LICENSE.md"><img alt="License" src="https://img.shields.io/badge/license-MIT-blue" /></a>
 </p>
 
-Version **0.4.0** refines the Setup Assistant and settings inspector, adds direct navigation
-to the Quickstart scene and SQL, and resets runtime state when Domain Reload is disabled.
+Version **0.5.0** adds a preview to the Model Generator so you can review proposed C# files
+before writing them.
 The 0.2.0 runtime API and [Editor scripting](Packages/com.supabaseunity.client/Documentation~/editor-scripting.md) remain available.
 
 ## Installation
@@ -25,11 +25,11 @@ In Unity 2021.3 or 2022.3, open **Window > Package Manager**. In Unity 6, open
 **Window > Package Management > Package Manager**. Select **Add package from git URL**:
 
 ```text
-https://github.com/DorukTan/unity-supabase.git?path=/Packages/com.supabaseunity.client#v0.4.0
+https://github.com/DorukTan/unity-supabase.git?path=/Packages/com.supabaseunity.client#v0.5.0
 ```
 
 UPM installs the Newtonsoft Json.NET dependency automatically. The
-[release page](https://github.com/DorukTan/unity-supabase/releases/tag/v0.4.0) also provides:
+[release page](https://github.com/DorukTan/unity-supabase/releases/tag/v0.5.0) also provides:
 
 - A `.tgz` for **Package Manager > Add package from tarball**.
 - A `.unitypackage` for **Assets > Import Package > Custom Package**. Install
@@ -149,13 +149,19 @@ tab, then open `Quickstart.unity`. The `.unitypackage` includes it under `Assets
 
 Editor HTTP clients use memory-only session and PKCE stores. They do not support Realtime,
 automatic token refresh, or automatic browser authentication. The Model Generator uses an
-Editor-only secret for its schema request; that secret is never saved to settings or models.
+Editor-only secret for its schema request. The key is cleared after fetching.
+
+The [Model Generator guide](Packages/com.supabaseunity.client/README.md#generate-c-models)
+covers preview and apply. The generator reads table and view properties from OpenAPI 2 or 3
+for the default exposed Data API schema. It supports scalar columns, objects, JSON, and
+arrays with item schemas. References and composed column schemas produce a validation
+error. Files for removed tables stay in the output folder for manual review.
 
 <a id="platform-support"></a>
 
 ## Verification and platform boundaries
 
-The local verification for 0.4.0 covers the following boundaries. A successful build
+The local verification for 0.5.0 covers the following boundaries. A successful build
 does not establish live service behavior on a device.
 
 | Target | Recorded verification |
