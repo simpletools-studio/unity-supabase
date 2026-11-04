@@ -17,6 +17,29 @@
 - OAuth opens the system browser through `Application.OpenURL`; configure `Application.deepLinkActivated` support in the player and add that callback URI to Supabase Auth.
 - The OS may terminate a backgrounded app during that browser hop. PKCE verifiers are therefore stored durably regardless of the persistence setting, so the deep link can still complete sign-in after a cold start.
 
-## Unity versions
+## Verification levels
 
-The runtime assembly avoids editor-only APIs and targets the Unity 2021.3 API surface. Unity compilation and tests run locally on Hub-activated editors; GitHub-hosted checks are intentionally license-free. New tagged releases record the exact editor version and test count used by the local release gate. That gate imports the generated `.unitypackage` into a clean project, builds WebGL, Windows, and Android smoke players, and generates an iOS Xcode project. The iOS result proves Unity compilation and export only; it does not replace Xcode compilation, signing, or a hardware run. Compatibility checks on Unity 2021.3 and 2022.3 are maintainer-run before stable compatibility claims, while the project version is the release gate used for every tag. Hardware validation remains separate from compilation. The package does not support consoles until their networking and secure-storage constraints are validated on hardware.
+| Check | What it establishes |
+| --- | --- |
+| Editor tests | The listed Unity Editor ran the SDK test suite. Loopback tests use local fixtures. |
+| Clean import | The released `.unitypackage` imported and compiled in a new Unity project. |
+| Player build | Unity produced a smoke player for the listed target. |
+| Xcode export | Unity generated an iOS project for Xcode. |
+| Runtime check | A named behavior ran in a browser, player, or on a device. The result applies to that environment and behavior. |
+| Live service check | A named operation ran against a real Supabase project. |
+
+## Results for 0.6.0
+
+| Target | Recorded check | Further coverage |
+| --- | --- | --- |
+| Unity Editor on Windows | EditMode tests on 2021.3.45f2, 2022.3.62f2, and 6000.6.7f1. Clean archive import on 6000.6.7f1. | Editor tests on Linux and macOS. |
+| WebGL | Smoke player build. | Browser integration and live service coverage vary by behavior. |
+| Windows x64 | Smoke player build. | Live service and long-running player checks. |
+| Linux x64 | Mono smoke player cross-built from the clean archive on Windows. | Linux Editor, desktop player, and live service coverage. |
+| macOS | No recorded player check. | Player build and execution. |
+| Android | Smoke APK build. | Device testing, including background and resume. |
+| iOS | Xcode project export. | Xcode compilation, signing, and device testing. |
+
+The release verification record contains the exact Editor version, test count, build results,
+and archive hashes. GitHub Actions validates the artifacts and the record. Unity checks run
+locally on an activated Editor. Console targets are outside the SDK's support scope.

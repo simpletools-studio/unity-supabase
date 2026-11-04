@@ -274,7 +274,9 @@ def validate_release_verification(
             "android",
             "iosXcodeProject",
         }
-        if not isinstance(player_builds, dict) or set(player_builds) != expected_player_builds:
+        if not isinstance(player_builds, dict) or set(player_builds) not in (
+            expected_player_builds, expected_player_builds | {"linux"}
+        ):
             fail(
                 "Release verification must contain WebGL, Windows, Android, and iOS "
                 "Xcode project build results"

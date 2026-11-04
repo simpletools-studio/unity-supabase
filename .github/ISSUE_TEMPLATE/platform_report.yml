@@ -1,13 +1,12 @@
 name: Platform report
-description: Report that you shipped or tested a build on a platform, working or not
+description: Share a platform build, export, or runtime result
 labels: ["documentation"]
 body:
   - type: markdown
     attributes:
       value: |
-        The [support matrix](https://github.com/DorukTan/unity-supabase#platform-support) still
-        has gaps. A detailed report gives the project real-world evidence. This is one of the
-        most useful things you can contribute, whether the result was good or bad.
+        Use the [support matrix](https://github.com/simpletools-studio/unity-supabase#platform-support)
+        to see which targets and behaviors have recorded results.
 
   - type: checkboxes
     id: no-credentials
@@ -32,6 +31,18 @@ body:
       required: true
 
   - type: dropdown
+    id: evidence
+    attributes:
+      label: What did you verify?
+      options:
+        - Player build
+        - Xcode project export
+        - Player or browser run with a local fixture
+        - Player or browser run against a live Supabase project
+    validations:
+      required: true
+
+  - type: dropdown
     id: outcome
     attributes:
       label: Outcome
@@ -46,7 +57,7 @@ body:
     id: versions
     attributes:
       label: Unity and package version
-      placeholder: Unity 6000.4.8f1, package 0.3.0
+      placeholder: Unity 6000.6.7f1, package 0.6.0
     validations:
       required: true
 

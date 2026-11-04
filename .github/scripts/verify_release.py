@@ -56,6 +56,12 @@ public static class SupabaseUnityCleanImportVerifier
             BuildTargetGroup.Standalone, BuildTarget.StandaloneWindows64, "windows", false);
     }
 
+    public static void BuildLinux()
+    {
+        BuildPlayerTarget(
+            BuildTargetGroup.Standalone, BuildTarget.StandaloneLinux64, "linux", false);
+    }
+
     public static void BuildAndroid()
     {
         BuildPlayerTarget(BuildTargetGroup.Android, BuildTarget.Android, "android", false);
@@ -447,7 +453,7 @@ def build_player(
         )
 
 
-def build_players(unity: Path, project: Path, temporary: Path) -> dict[str, str]:
+def build_players(unity: Path, project: Path, temporary: Path, include_linux: bool) -> dict[str, str]:
     builds = [
         {
             "name": "webgl",
@@ -480,6 +486,14 @@ def build_players(unity: Path, project: Path, temporary: Path) -> dict[str, str]
             ),
         },
     ]
+    if include_linux:
+        builds.insert(2, {
+            "name": "linux",
+            "command_line_target": "Linux64",
+            "execute_method": "SupabaseUnityCleanImportVerifier.BuildLinux",
+            "output": temporary / "linux-build" / "SupabaseUnityBuildProbe.x86_64",
+            "expected_output": temporary / "linux-build" / "SupabaseUnityBuildProbe.x86_64",
+        })
     results: dict[str, str] = {}
     for build in builds:
         build_player(unity, project, temporary, **build)
@@ -541,6 +555,7 @@ def main() -> int:
     parser.add_argument("--unity", help="Path to the Unity executable")
     parser.add_argument("--output", type=Path, default=ROOT / "dist")
     parser.add_argument("--evidence", type=Path, default=DEFAULT_EVIDENCE)
+    parser.add_argument("--linux", action="store_true", help="Also build a Linux x64 smoke player")
     args = parser.parse_args()
 
     unity_version = project_unity_version()
@@ -577,7 +592,7 @@ def main() -> int:
         tests = run_editmode_tests(unity, temporary)
         unitypackage = archives / f"com.supabaseunity.client-{version}.unitypackage"
         clean_project = verify_clean_unitypackage_import(unity, unitypackage, temporary)
-        player_builds = build_players(unity, clean_project, temporary)
+        player_builds = build_players(unity, clean_project, temporary, args.linux)
 
         release_archives = [
             archives / f"com.supabaseunity.client-{version}.tgz",
@@ -625,6 +640,8 @@ def main() -> int:
     print(f"  EditMode: {tests['passed']}/{tests['total']} passed")
     print("  Clean .unitypackage import: passed")
     print("  Player smoke targets: WebGL, Windows, Android, and iOS Xcode project passed")
+    if args.linux:
+        print("  Linux x64 smoke player build: passed")
     print(f"  Archives: {output}")
     print(f"  Verification record: {evidence_path}")
     return 0

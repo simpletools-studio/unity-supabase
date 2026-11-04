@@ -8,15 +8,15 @@ An independent Supabase client for Unity 2021.3 and newer, with Auth, Database, 
 Storage, and Edge Functions APIs for WebGL, desktop, and mobile projects.
 
 <p align="center">
-  <a href="https://github.com/simpletools-studio/unity-supabase/releases/tag/v0.5.0"><img alt="Release" src="https://img.shields.io/badge/release-0.5.0-3ecf8e" /></a>
-  <a href="https://github.com/simpletools-studio/unity-supabase/releases/download/v0.5.0/com.supabaseunity.client-0.5.0.unitypackage"><img alt="Download unitypackage" src="https://img.shields.io/badge/download-.unitypackage-3ecf8e?logo=unity&amp;logoColor=white" /></a>
+  <a href="https://github.com/simpletools-studio/unity-supabase/releases/tag/v0.6.0"><img alt="Release" src="https://img.shields.io/badge/release-0.6.0-3ecf8e" /></a>
+  <a href="https://github.com/simpletools-studio/unity-supabase/releases/download/v0.6.0/com.supabaseunity.client-0.6.0.unitypackage"><img alt="Download unitypackage" src="https://img.shields.io/badge/download-.unitypackage-3ecf8e?logo=unity&amp;logoColor=white" /></a>
   <a href="https://github.com/simpletools-studio/unity-supabase/actions/workflows/package-checks.yml"><img alt="Package checks" src="https://github.com/simpletools-studio/unity-supabase/actions/workflows/package-checks.yml/badge.svg" /></a>
   <img alt="Unity" src="https://img.shields.io/badge/Unity-2021.3%20to%206-222222?logo=unity" />
   <a href="LICENSE.md"><img alt="License" src="https://img.shields.io/badge/license-MIT-blue" /></a>
 </p>
 
-Version **0.5.0** adds a preview to the Model Generator so you can review proposed C# files
-before writing them.
+Version **0.6.0** documents the platform checks behind each support claim and adds
+a Linux x64 smoke build to the release verification.
 The 0.2.0 runtime API and [Editor scripting](Packages/com.supabaseunity.client/Documentation~/editor-scripting.md) remain available.
 
 ## Installation
@@ -25,11 +25,11 @@ In Unity 2021.3 or 2022.3, open **Window > Package Manager**. In Unity 6, open
 **Window > Package Management > Package Manager**. Select **Add package from git URL**:
 
 ```text
-https://github.com/DorukTan/unity-supabase.git?path=/Packages/com.supabaseunity.client#v0.5.0
+https://github.com/DorukTan/unity-supabase.git?path=/Packages/com.supabaseunity.client#v0.6.0
 ```
 
 UPM installs the Newtonsoft Json.NET dependency automatically. The
-[release page](https://github.com/simpletools-studio/unity-supabase/releases/tag/v0.5.0) also provides:
+[release page](https://github.com/simpletools-studio/unity-supabase/releases/tag/v0.6.0) also provides:
 
 - A `.tgz` for **Package Manager > Add package from tarball**.
 - A `.unitypackage` for **Assets > Import Package > Custom Package**. Install
@@ -161,7 +161,7 @@ error. Files for removed tables stay in the output folder for manual review.
 
 ## Verification and platform boundaries
 
-The local verification for 0.5.0 covers the following boundaries. A successful build
+The local verification for 0.6.0 covers the following boundaries. A successful build
 does not establish live service behavior on a device.
 
 | Target | Recorded verification |
@@ -173,8 +173,16 @@ does not establish live service behavior on a device.
 | Windows | Smoke player build from the clean package import |
 | Android | Smoke player build from the clean package import |
 | iOS | Unity Xcode project export; Xcode compilation, signing, and hardware execution remain separate |
-| macOS and Linux players | Not verified by the current release gate |
+| Linux x64 | Mono smoke player cross-built on Windows from the clean package import |
+| macOS players | No recorded player check |
 | Consoles | Unsupported |
+
+Separate loopback checks exercised WebSocket echo, remote close, connection cancellation,
+and file storage in headless Windows and Linux x64 Mono players. The Linux run used Ubuntu
+on WSL2. A Chromium fixture exercised callback URL cleanup, browser storage, and the
+WebSocket bridge. An EditMode test simulated focus return and verified session refresh.
+These results cover the listed behaviors with fixtures. Android and iOS device behavior
+and live Supabase service behavior require separate checks.
 
 The package uses `UnityWebRequest` for HTTP, browser WebSockets on WebGL, and native
 WebSockets elsewhere. See [platform notes](Packages/com.supabaseunity.client/Documentation~/platforms.md)
