@@ -25,7 +25,7 @@ In Unity 2021.3 or 2022.3, open **Window > Package Manager**. In Unity 6, open
 **Window > Package Management > Package Manager**. Select **Add package from git URL**:
 
 ```text
-https://github.com/simpletools-studio/unity-supabase.git?path=/Packages/com.supabaseunity.client#v0.5.0
+https://github.com/DorukTan/unity-supabase.git?path=/Packages/com.supabaseunity.client#v0.5.0
 ```
 
 UPM installs the Newtonsoft Json.NET dependency automatically. The
