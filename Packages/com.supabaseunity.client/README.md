@@ -3,8 +3,8 @@
 An independent Supabase client for Unity 2021.3 and newer. The package provides Auth,
 Database, Realtime, Storage and Edge Functions APIs for WebGL, desktop and mobile projects.
 
-> `0.3.0` adds [Editor scripting](Documentation~/editor-scripting.md) while preserving the
-> `0.2.0` runtime API. Review the [changelog](CHANGELOG.md) before upgrading.
+> `0.4.0` refines setup and Quickstart navigation while preserving the `0.2.0` runtime API
+> and [Editor scripting](Documentation~/editor-scripting.md). Review the [changelog](CHANGELOG.md) before upgrading.
 
 ## Installation
 
@@ -12,7 +12,7 @@ In Unity 2021.3 or 2022.3, open **Window > Package Manager**. In Unity 6, open
 **Window > Package Management > Package Manager**. Select **Add package from git URL**, then enter:
 
 ```text
-https://github.com/DorukTan/unity-supabase.git?path=/Packages/com.supabaseunity.client#v0.3.0
+https://github.com/DorukTan/unity-supabase.git?path=/Packages/com.supabaseunity.client#v0.4.0
 ```
 
 Release tarballs and `.unitypackage` files are available on the
@@ -25,9 +25,14 @@ the `.unitypackage` alongside the UPM distribution.
 Open **Tools > Supabase > Setup**. Create or select a settings asset, set the project URL,
 publishable key and Data API schema, then run **Test Project Connection**. Assign the asset to the
 component that initializes the client. Legacy `anon` JWT keys are also supported.
+The selected settings path is shown in Setup. Session persistence, automatic refresh, Realtime
+startup and request timeout are grouped under **Runtime options** in Setup and the inspector.
 
 UPM users can import **Quickstart** from the package's **Samples** tab. It contains repeatable SQL,
 a Database query, a Realtime subscription, and the steps needed to run both.
+Use **Show setup.sql** and **Open Quickstart Scene** in Setup to locate the SQL and open the
+imported `Quickstart.unity`. Run the SQL in Supabase, assign settings on the Quickstart object,
+then press Play. Opening the scene prompts to save modified scenes and is disabled in Play mode.
 The `.unitypackage` distribution includes the same sample at
 `Assets/SupabaseUnity/Samples/Quickstart`.
 

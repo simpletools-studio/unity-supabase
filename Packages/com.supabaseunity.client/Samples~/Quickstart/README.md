@@ -1,7 +1,7 @@
 # Quickstart sample
 
-This sample reads a small leaderboard and listens for changes to it. It is intentionally a
-script instead of a prebuilt scene, so you can see every object added to your project.
+This sample reads a small leaderboard and listens for changes to it. Open `Quickstart.unity` for a prebuilt scene with setup instructions and leaderboard output.
+The scene contains no credentials; assign your own settings asset before connecting.
 
 ## 1. Configure Supabase
 
@@ -24,10 +24,10 @@ user-specific policies for real player data.
 
 ## 3. Run it in Unity
 
-1. Create an empty GameObject in any scene.
-2. Add the `SupabaseQuickstart` component.
-3. Assign the settings asset.
-4. Press Play.
+1. Open `Quickstart.unity`.
+2. Select the **Quickstart** object.
+3. Assign the settings asset on its `SupabaseQuickstart` component.
+4. Press Play. The Game view shows setup instructions and loaded scores.
 
 The Console should show three scores followed by a Realtime subscription message. To trigger a
 change, run this in the Supabase SQL Editor:
@@ -39,6 +39,6 @@ where player_name = 'Ada';
 ```
 
 If the query or subscription fails, start with the
-[troubleshooting guide](https://github.com/DorukTan/unity-supabase/blob/v0.3.0/Packages/com.supabaseunity.client/Documentation~/troubleshooting.md).
+[troubleshooting guide](https://github.com/DorukTan/unity-supabase/blob/v0.4.0/Packages/com.supabaseunity.client/Documentation~/troubleshooting.md).
 Postgres Changes also requires the table to be in the `supabase_realtime` publication; `setup.sql`
 handles that when the standard publication exists.

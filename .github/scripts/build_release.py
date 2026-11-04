@@ -30,6 +30,7 @@ TEXT_SUFFIXES = {
     ".sql",
     ".txt",
     ".xml",
+    ".unity",
 }
 
 
@@ -205,19 +206,21 @@ def unity_assets() -> list[UnityAsset]:
                 raise ValueError(f"Symlinks are not supported: {source.relative_to(ROOT)}")
             target = target_root / source.relative_to(source_root)
             pathname = target.as_posix()
-            guid = generated_guid(pathname)
+            meta_path = Path(f"{source}.meta")
+            guid = read_guid(meta_path) if meta_path.is_file() else generated_guid(pathname)
             assets.append(
                 UnityAsset(
                     source if source.is_file() else None,
-                    generated_file_meta(guid, source.suffix)
-                    if source.is_file()
-                    else generated_folder_meta(guid),
+                    read_source_bytes(meta_path) if meta_path.is_file() else (
+                        generated_file_meta(guid, source.suffix)
+                        if source.is_file() else generated_folder_meta(guid)
+                    ),
                     pathname,
                     guid,
                 )
             )
 
-    for filename in ("README.md", "README.tr.md", "CHANGELOG.md", "LICENSE.md"):
+    for filename in ("README.md", "README.tr.md", "CHANGELOG.md", "LICENSE.md", "Third-Party Notices.txt"):
         source = PACKAGE / filename
         meta_path = Path(f"{source}.meta")
         assets.append(
@@ -298,6 +301,7 @@ def validate_unitypackage(path: Path) -> None:
             f"{UNITY_TARGET_ROOT.as_posix()}/Samples/Quickstart/README.md",
             f"{UNITY_TARGET_ROOT.as_posix()}/Samples/Quickstart/setup.sql",
             f"{UNITY_TARGET_ROOT.as_posix()}/Samples/Quickstart/SupabaseQuickstart.cs",
+            f"{UNITY_TARGET_ROOT.as_posix()}/Samples/Quickstart/Quickstart.unity",
         }
         missing = sorted(required - seen_paths)
         if missing:

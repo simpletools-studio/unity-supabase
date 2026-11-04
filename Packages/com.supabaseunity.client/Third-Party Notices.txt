@@ -1,0 +1,5 @@
+Newtonsoft.Json for Unity (com.unity.nuget.newtonsoft-json 3.2.1)
+Copyright © 2022 Unity Technologies ApS
+
+Licensed under the Unity Companion License for Unity-dependent projects:
+https://unity.com/legal/licenses/unity_companion_license

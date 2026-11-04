@@ -14,14 +14,29 @@ Copy the URL and key from the Supabase Dashboard **Connect** dialog, then click 
 Connection**. This checks the client configuration and network path without sending an elevated
 key. It does not test a table or its policies.
 
+The selected settings asset path is shown below the selector. **Runtime options** contains
+session persistence, automatic refresh, Realtime startup and the HTTP timeout. These options
+keep their existing defaults. Enabling persistence shows the storage warning even when the
+foldout is closed. Changing settings clears previous connection feedback.
+
 Call `InitializeAsync` once near game startup. When persistence is explicitly enabled, this restores an existing session and refreshes it when needed. It can also optionally connect Realtime.
 
 ## 2. Run the Quickstart
 
-UPM users can import **Quickstart** from the package's **Samples** tab in Package Manager. Run its
-`setup.sql` in the Supabase SQL Editor, attach `SupabaseQuickstart` to an empty GameObject, assign
-the settings asset, and press Play. The sample queries `public.scores` and subscribes to its
-Postgres Changes.
+UPM users can import **Quickstart** from the package's **Samples** tab in Package Manager.
+In **Tools > Supabase > Setup**, use **Show setup.sql** to locate the SQL, then run it in the
+Supabase SQL Editor. Click **Open Quickstart Scene**, select the **Quickstart** object, assign
+your settings asset and press Play. The scene displays setup instructions and leaderboard rows;
+the sample queries `public.scores` and subscribes to its Postgres Changes.
+
+Opening the scene uses Unity's normal save prompt for modified scenes. Cancel leaves the current
+scene open. Exit Play mode before opening another scene. The assistant does not run SQL, assign
+settings to the scene, or contact Supabase just because a scene was opened.
+
+If several sample copies exist, Setup shows the selected path and consistently uses the first
+script path in ordinal order. To use another copy, open that scene directly in the Project window.
+Older imported samples without a scene retain **Show Imported Quickstart** and the guide; add
+`SupabaseQuickstart` to a GameObject and assign settings to run those samples.
 
 The `.unitypackage` distribution includes the same files at
 `Assets/SupabaseUnity/Samples/Quickstart`; no separate sample import is required.

@@ -8,16 +8,16 @@ An independent Supabase client for Unity 2021.3 and newer, with Auth, Database, 
 Storage, and Edge Functions APIs for WebGL, desktop, and mobile projects.
 
 <p align="center">
-  <a href="https://github.com/DorukTan/unity-supabase/releases/tag/v0.3.0"><img alt="Release" src="https://img.shields.io/badge/release-0.3.0-3ecf8e" /></a>
-  <a href="https://github.com/DorukTan/unity-supabase/releases/download/v0.3.0/com.supabaseunity.client-0.3.0.unitypackage"><img alt="Download unitypackage" src="https://img.shields.io/badge/download-.unitypackage-3ecf8e?logo=unity&amp;logoColor=white" /></a>
+  <a href="https://github.com/DorukTan/unity-supabase/releases/tag/v0.4.0"><img alt="Release" src="https://img.shields.io/badge/release-0.4.0-3ecf8e" /></a>
+  <a href="https://github.com/DorukTan/unity-supabase/releases/download/v0.4.0/com.supabaseunity.client-0.4.0.unitypackage"><img alt="Download unitypackage" src="https://img.shields.io/badge/download-.unitypackage-3ecf8e?logo=unity&amp;logoColor=white" /></a>
   <a href="https://github.com/DorukTan/unity-supabase/actions/workflows/package-checks.yml"><img alt="Package checks" src="https://github.com/DorukTan/unity-supabase/actions/workflows/package-checks.yml/badge.svg" /></a>
   <img alt="Unity" src="https://img.shields.io/badge/Unity-2021.3%20to%206-222222?logo=unity" />
   <a href="LICENSE.md"><img alt="License" src="https://img.shields.io/badge/license-MIT-blue" /></a>
 </p>
 
-Version **0.3.0** adds HTTP clients for Editor scripts outside Play mode while preserving
-the 0.2.0 runtime API. See the [Editor scripting guide](Packages/com.supabaseunity.client/Documentation~/editor-scripting.md)
-for supported operations and lifetime requirements.
+Version **0.4.0** refines the Setup Assistant and settings inspector, adds direct navigation
+to the Quickstart scene and SQL, and resets runtime state when Domain Reload is disabled.
+The 0.2.0 runtime API and [Editor scripting](Packages/com.supabaseunity.client/Documentation~/editor-scripting.md) remain available.
 
 ## Installation
 
@@ -25,11 +25,11 @@ In Unity 2021.3 or 2022.3, open **Window > Package Manager**. In Unity 6, open
 **Window > Package Management > Package Manager**. Select **Add package from git URL**:
 
 ```text
-https://github.com/DorukTan/unity-supabase.git?path=/Packages/com.supabaseunity.client#v0.3.0
+https://github.com/DorukTan/unity-supabase.git?path=/Packages/com.supabaseunity.client#v0.4.0
 ```
 
 UPM installs the Newtonsoft Json.NET dependency automatically. The
-[release page](https://github.com/DorukTan/unity-supabase/releases/tag/v0.3.0) also provides:
+[release page](https://github.com/DorukTan/unity-supabase/releases/tag/v0.4.0) also provides:
 
 - A `.tgz` for **Package Manager > Add package from tarball**.
 - A `.unitypackage` for **Assets > Import Package > Custom Package**. Install
@@ -134,7 +134,7 @@ the coroutine bridge. Blocking with `.Result`, `.Wait()`, or `.GetAwaiter().GetR
 freeze Unity because requests need the main thread to advance.
 
 For a Database and Realtime example, import **Quickstart** from Package Manager's **Samples**
-tab. The `.unitypackage` includes it under `Assets/SupabaseUnity/Samples/Quickstart`.
+tab, then open `Quickstart.unity`. The `.unitypackage` includes it under `Assets/SupabaseUnity/Samples/Quickstart`.
 
 ## Services and Editor tools
 
@@ -155,14 +155,14 @@ Editor-only secret for its schema request; that secret is never saved to setting
 
 ## Verification and platform boundaries
 
-The local verification for 0.3.0 covers the following boundaries. A successful build
+The local verification for 0.4.0 covers the following boundaries. A successful build
 does not establish live service behavior on a device.
 
 | Target | Recorded verification |
 | --- | --- |
 | Unity 2021.3.45f2 Editor | EditMode suite and documentation example compilation |
 | Unity 2022.3.62f2 Editor | EditMode suite and documentation example compilation |
-| Unity 6000.4.8f1 Editor | EditMode suite and clean `.unitypackage` import/compilation |
+| Unity 6000.6.7f1 Editor | EditMode suite and clean `.unitypackage` import/compilation |
 | WebGL | Smoke player build from the clean package import |
 | Windows | Smoke player build from the clean package import |
 | Android | Smoke player build from the clean package import |

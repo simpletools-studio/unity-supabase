@@ -11,13 +11,15 @@ namespace Supabase.Unity.Editor
     [CustomEditor(typeof(SupabaseSettings))]
     internal sealed class SupabaseSettingsEditor : UnityEditor.Editor
     {
+        private bool showRuntimeOptions;
+
         public override void OnInspectorGUI()
         {
-            SupabaseSettingsInspectorGui.DrawFields(serializedObject);
+            SupabaseSettingsInspectorGui.DrawFields(serializedObject, ref showRuntimeOptions);
             var settings = (SupabaseSettings)target;
             SupabaseSettingsInspectorGui.DrawValidation(settings);
             EditorGUILayout.Space();
-            if (GUILayout.Button("Open Setup Assistant"))
+            if (SupabaseSetupWindow.ActionButton("Open Setup Assistant"))
                 SupabaseSetupWindow.Open(settings);
         }
     }
@@ -30,17 +32,30 @@ namespace Supabase.Unity.Editor
             "provide an ISessionStore backed by the operating system's credential storage. " +
             "See the session-storage documentation for platform details.";
 
-        internal static void DrawFields(SerializedObject settingsObject)
+        internal static bool DrawFields(SerializedObject settingsObject, ref bool showRuntimeOptions)
         {
             settingsObject.Update();
             EditorGUILayout.PropertyField(settingsObject.FindProperty("projectUrl"));
             EditorGUILayout.PropertyField(settingsObject.FindProperty("publishableKey"));
             EditorGUILayout.PropertyField(settingsObject.FindProperty("defaultSchema"));
-            EditorGUILayout.PropertyField(settingsObject.FindProperty("persistSession"));
-            EditorGUILayout.PropertyField(settingsObject.FindProperty("autoRefreshToken"));
-            EditorGUILayout.PropertyField(settingsObject.FindProperty("autoConnectRealtime"));
-            EditorGUILayout.PropertyField(settingsObject.FindProperty("httpTimeoutSeconds"));
-            settingsObject.ApplyModifiedProperties();
+            EditorGUILayout.Space(EditorGUIUtility.standardVerticalSpacing);
+            showRuntimeOptions = EditorGUILayout.Foldout(showRuntimeOptions, "Runtime options", true);
+            var persistence = settingsObject.FindProperty("persistSession");
+            if (showRuntimeOptions)
+            {
+                EditorGUI.indentLevel++;
+                persistence.boolValue = EditorGUILayout.Toggle(
+                    new GUIContent(persistence.displayName, persistence.tooltip), persistence.boolValue);
+                EditorGUILayout.PropertyField(settingsObject.FindProperty("autoRefreshToken"));
+                EditorGUILayout.PropertyField(settingsObject.FindProperty("autoConnectRealtime"));
+                EditorGUILayout.PropertyField(settingsObject.FindProperty("httpTimeoutSeconds"));
+                EditorGUI.indentLevel--;
+            }
+            var changed = settingsObject.ApplyModifiedProperties();
+            // Keep the storage warning visible even when Runtime options is collapsed or validation fails.
+            if (persistence.boolValue)
+                EditorGUILayout.HelpBox(PersistenceWarning, MessageType.Warning);
+            return changed;
         }
 
         internal static void DrawValidation(SupabaseSettings settings)
@@ -54,12 +69,8 @@ namespace Supabase.Unity.Editor
             }
 
             EditorGUILayout.HelpBox(
-                "The project URL and client-safe key are valid. This does not test network access or Row Level Security policies.",
+                "Configuration looks valid locally. This does not test network access, tables, or Row Level Security policies.",
                 MessageType.Info);
-            if (options.PersistSession)
-                EditorGUILayout.HelpBox(
-                    PersistenceWarning,
-                    MessageType.Warning);
         }
 
         internal static bool TryValidate(

@@ -1,6 +1,25 @@
 # Changelog
 
-## [Unreleased]
+## [0.4.0] - 2026-11-03
+
+### Changed
+
+- Setup Assistant and settings inspector group runtime tuning options in a foldout, retain
+  persistence warnings, and distinguish local configuration from verified network access.
+- Setup shows the selected settings path and separates step titles from wrapping status text.
+- Imported Quickstart scenes can be opened from Setup with the normal modified-scene save
+  prompt. SQL can be located alongside the selected sample; older script-only samples retain
+  their guide and component workflow. Scene opening is unavailable during Play mode.
+
+### Fixed
+
+- Clear runtime event subscriptions and queued callbacks on Play entry when Domain Reload is disabled.
+- Preserve sample asset metadata in release exports so demo scene script references remain valid.
+
+### Added
+
+- Quickstart demo scene with setup instructions and leaderboard output in the Game view.
+- Cancellation of Quickstart requests when the sample is disabled.
 
 ## [0.3.0] - 2026-10-14
 
