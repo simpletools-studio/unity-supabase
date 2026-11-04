@@ -27,10 +27,10 @@ namespace Supabase.Unity.Editor
             "void", "volatile", "while"
         };
         private string projectUrl = string.Empty;
-        private string secretApiKey = string.Empty;
+        [NonSerialized] private string secretApiKey = string.Empty;
         private string outputFolder = "Assets/Supabase/Generated";
         private string generatedNamespace = "Game.Database";
-        private string status = "Fetches the Data API OpenAPI schema and creates plain C# models.";
+        private string status = "Fetch the default Data API schema to preview C# models.";
         private string settingsSourcePath;
         private bool allowCustomSchemaHost;
         private bool generating;
@@ -39,11 +39,35 @@ namespace Supabase.Unity.Editor
         private CancellationTokenSource generationCancellation;
         private UnityWebRequest activeRequest;
 
+        private List<ModelChange> preview;
+        private string previewFolder;
+        private int selectedModel;
+
+        private sealed class ModelChange
+        {
+            internal string Table;
+            internal string Name;
+            internal string Path;
+            internal string PreviousSource;
+            internal string Source;
+            internal string BlockedReason;
+
+            internal string Action => BlockedReason != null ? "Blocked" : PreviousSource == null ? "Create" :
+                PreviousSource == Source ? "Unchanged" : "Update";
+        }
+
         [MenuItem("Tools/Supabase/Model Generator")]
         internal static void Open()
         {
+            Open(null);
+        }
+
+        internal static void Open(SupabaseSettings settings)
+        {
             var window = GetWindow<SupabaseModelGeneratorWindow>("Supabase Models");
             window.minSize = new Vector2(460f, 420f);
+            if (settings != null)
+                window.UseSettings(settings, AssetDatabase.GetAssetPath(settings));
             window.Show();
         }
 
@@ -63,8 +87,17 @@ namespace Supabase.Unity.Editor
             var previousLabelWidth = EditorGUIUtility.labelWidth;
             EditorGUIUtility.labelWidth = Mathf.Min(200f, position.width * 0.46f);
             EditorGUI.BeginDisabledGroup(generating);
+            EditorGUI.BeginChangeCheck();
             projectUrl = EditorGUILayout.TextField("Project URL", projectUrl);
+            if (EditorGUI.EndChangeCheck())
+            {
+                settingsSourcePath = null;
+                secretApiKey = string.Empty;
+                allowCustomSchemaHost = false;
+                DiscardPreview();
+            }
             secretApiKey = EditorGUILayout.PasswordField("Secret Key (Editor only)", secretApiKey);
+            EditorGUI.BeginChangeCheck();
             allowCustomSchemaHost = EditorGUILayout.Toggle("Allow Custom Host", allowCustomSchemaHost);
             if (allowCustomSchemaHost)
                 EditorGUILayout.HelpBox(
@@ -74,19 +107,22 @@ namespace Supabase.Unity.Editor
                 EditorGUILayout.LabelField("Settings: " + settingsSourcePath, EditorStyles.wordWrappedMiniLabel);
             outputFolder = EditorGUILayout.TextField("Output Folder", outputFolder);
             generatedNamespace = EditorGUILayout.TextField("Namespace", generatedNamespace);
+            if (EditorGUI.EndChangeCheck())
+                DiscardPreview();
             EditorGUIUtility.labelWidth = previousLabelWidth;
-            if (GUILayout.Button("Reload from SupabaseSettings"))
+            if (SupabaseSetupWindow.ActionButton("Reload from SupabaseSettings"))
                 LoadFromSupabaseSettings(true);
             EditorGUILayout.Space(EditorGUIUtility.standardVerticalSpacing * 4f);
-            if (GUILayout.Button(generating ? "Generating..." : "Fetch Schema and Generate",
+            if (SupabaseSetupWindow.ActionButton(generating ? "Fetching schema..." : "Fetch Schema and Preview",
                     GUILayout.Height(EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing * 3f)))
-                GenerateAsync();
+                FetchPreview();
             EditorGUI.EndDisabledGroup();
-            if (generating && GUILayout.Button("Cancel Generation"))
+            if (generating && SupabaseSetupWindow.ActionButton("Cancel Fetch"))
                 CancelGeneration();
             EditorGUILayout.Space();
             EditorGUILayout.HelpBox(status, statusType);
-            EditorGUILayout.LabelField("Closing this window cancels an active generation request.", EditorStyles.wordWrappedMiniLabel);
+            if (preview != null)
+                DrawPreview();
             EditorGUILayout.EndScrollView();
         }
 
@@ -105,6 +141,7 @@ namespace Supabase.Unity.Editor
         internal void CancelGeneration()
         {
             secretApiKey = string.Empty;
+            preview = null;
             if (generationCancellation != null) generationCancellation.Cancel();
             if (activeRequest != null) activeRequest.Abort();
         }
@@ -139,23 +176,84 @@ namespace Supabase.Unity.Editor
                 return false;
             }
 
-            if (overwriteExisting || string.IsNullOrWhiteSpace(projectUrl))
-                projectUrl = settings.ProjectUrl;
-            settingsSourcePath = path;
-            status = "Loaded Supabase configuration from " + path + ".";
-            statusType = MessageType.Info;
-            Repaint();
+            UseSettings(settings, path);
             return true;
         }
 
-        private async void GenerateAsync()
+        private void UseSettings(SupabaseSettings settings, string path)
         {
-            await GenerateModelsAsync();
+            if (projectUrl != settings.ProjectUrl)
+            {
+                if (generating)
+                    CancelGeneration();
+                allowCustomSchemaHost = false;
+                secretApiKey = string.Empty;
+            }
+            projectUrl = settings.ProjectUrl;
+            settingsSourcePath = path;
+            DiscardPreview();
+            status = "Loaded Supabase configuration from " + path + ".";
+            statusType = MessageType.Info;
+            Repaint();
         }
 
-        internal async Task GenerateModelsAsync()
+        private void DiscardPreview()
+        {
+            preview = null;
+            status = "Fetch the schema to review the proposed models.";
+            statusType = MessageType.Info;
+        }
+
+        private void DrawPreview()
+        {
+            var labels = preview.ConvertAll(model => model.Action + "   " + model.Name + ".cs");
+            EditorGUILayout.LabelField("Review Models", EditorStyles.boldLabel);
+            EditorGUILayout.BeginHorizontal();
+            var discard = SupabaseSetupWindow.ActionButton("Discard Preview");
+            bool apply;
+            using (new EditorGUI.DisabledScope(!CanApplyPreview()))
+                apply = SupabaseSetupWindow.ActionButton("Apply Changes");
+            EditorGUILayout.EndHorizontal();
+            if (discard || apply)
+            {
+                if (discard)
+                    DiscardPreview();
+                else
+                    ApplyPreview();
+                GUIUtility.ExitGUI();
+            }
+            selectedModel = EditorGUILayout.Popup("Model File", selectedModel, labels.ToArray());
+            var selected = preview[selectedModel];
+            EditorGUILayout.LabelField("Schema: " + selected.Table, EditorStyles.wordWrappedLabel);
+            EditorGUILayout.LabelField("File: " + selected.Path, EditorStyles.wordWrappedMiniLabel);
+            if (selected.Action == "Update")
+            {
+                EditorGUILayout.LabelField("Current Source", EditorStyles.miniBoldLabel);
+                DrawSource(selected.PreviousSource);
+            }
+            if (selected.BlockedReason != null)
+                EditorGUILayout.HelpBox(selected.BlockedReason, MessageType.Error);
+            EditorGUILayout.LabelField("Proposed Source", EditorStyles.miniBoldLabel);
+            DrawSource(selected.Source);
+        }
+
+        private static void DrawSource(string source)
+        {
+            var style = new GUIStyle(EditorStyles.textArea) { wordWrap = true };
+            var height = style.CalcHeight(new GUIContent(source), EditorGUIUtility.currentViewWidth - 40f);
+            EditorGUILayout.SelectableLabel(source, style, GUILayout.Height(height));
+        }
+
+        private async void FetchPreview()
+        {
+            await FetchPreviewAsync();
+        }
+
+        internal async Task FetchPreviewAsync()
         {
             if (generating) return;
+            preview = null;
+            var editorSecret = string.Empty;
             var cancellation = new CancellationTokenSource();
             generationCancellation = cancellation;
             var token = cancellation.Token;
@@ -165,13 +263,16 @@ namespace Supabase.Unity.Editor
             Repaint();
             try
             {
-                var databaseEndpoint = ResolveDatabaseEndpoint(projectUrl, allowCustomSchemaHost);
+                var requestedUrl = projectUrl;
+                var requestedCustomHost = allowCustomSchemaHost;
+                var databaseEndpoint = ResolveDatabaseEndpoint(requestedUrl, requestedCustomHost);
                 ValidateEditorSecretKey(secretApiKey);
-                var editorSecret = secretApiKey.Trim();
+                editorSecret = secretApiKey.Trim();
                 secretApiKey = string.Empty;
                 var requestedFolder = outputFolder;
                 var absoluteFolder = ResolveOutputFolder(requestedFolder);
-                var requestedNamespace = ValidateNamespace(generatedNamespace);
+                var namespaceInput = generatedNamespace;
+                var requestedNamespace = ValidateNamespace(namespaceInput);
                 string openApiText;
                 using (var request = UnityWebRequest.Get(databaseEndpoint.AbsoluteUri.TrimEnd('/') + "/"))
                 {
@@ -188,43 +289,85 @@ namespace Supabase.Unity.Editor
 #else
                     if (request.isNetworkError || request.isHttpError)
 #endif
-                        throw new InvalidOperationException(SupabaseHttp.Redact(
-                            request.error + "\n" + request.downloadHandler.text));
+                        throw new InvalidOperationException(request.responseCode > 0
+                            ? "Schema request returned HTTP " + request.responseCode +
+                              ". Check the project URL, secret key and Data API settings."
+                            : "Could not reach the schema endpoint. Check the URL and network connection.");
                     openApiText = request.downloadHandler.text;
                     activeRequest = null;
                 }
 
                 token.ThrowIfCancellationRequested();
-                var openApi = JObject.Parse(openApiText);
+                if (requestedUrl != projectUrl || requestedCustomHost != allowCustomSchemaHost ||
+                    requestedFolder != outputFolder || namespaceInput != generatedNamespace)
+                    throw new InvalidOperationException("The configuration changed. Fetch the schema again.");
+                if (openApiText.IndexOf(editorSecret, StringComparison.Ordinal) >= 0)
+                    throw new InvalidOperationException("The schema response contained the request credential.");
+                var openApi = JObject.Parse(openApiText, new JsonLoadSettings
+                {
+                    DuplicatePropertyNameHandling = DuplicatePropertyNameHandling.Error
+                });
+                if (openApi.ToString().IndexOf(editorSecret, StringComparison.Ordinal) >= 0)
+                    throw new InvalidOperationException("The schema response contained the request credential.");
                 var schemas = openApi["definitions"] as JObject ?? openApi["components"]?["schemas"] as JObject;
                 if (schemas == null || !schemas.HasValues)
                     throw new InvalidOperationException("The OpenAPI document did not contain table schemas. Check Data API exposure and grants.");
 
-                var generatedFiles = new List<KeyValuePair<string, string>>();
+                var generatedFiles = new List<ModelChange>();
                 var destinations = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                var skipped = 0;
                 foreach (var schema in schemas.Properties())
                 {
-                    var definition = schema.Value as JObject;
-                    if (definition == null || definition["properties"] == null) continue;
-                    var className = Identifier(schema.Name, true);
+                    if (!(schema.Value is JObject definition))
+                        throw new InvalidOperationException("Invalid definition for " + schema.Name + ".");
+                    if (definition["properties"] == null)
+                    {
+                        skipped++;
+                        continue;
+                    }
+                    if (!(definition["properties"] is JObject))
+                        throw new InvalidOperationException("Invalid properties for " + schema.Name + ".");
+                    var className = Identifier(schema.Name);
+                    if (System.Text.RegularExpressions.Regex.IsMatch(className,
+                        @"^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])$", System.Text.RegularExpressions.RegexOptions.IgnoreCase |
+                        System.Text.RegularExpressions.RegexOptions.CultureInvariant))
+                        className = "_" + className;
                     var destination = Path.Combine(absoluteFolder, className + ".cs");
                     if (!destinations.Add(destination))
                         throw new InvalidOperationException(
                             "Multiple schema definitions map to the generated type " + className + ". Rename the conflicting database objects.");
-                    EnsureSafeGeneratedTarget(destination);
-                    generatedFiles.Add(new KeyValuePair<string, string>(destination,
-                        GenerateModel(schema.Name, className, definition, requestedNamespace)));
+                    var change = new ModelChange
+                    {
+                        Table = schema.Name,
+                        Name = className,
+                        Path = destination,
+                        Source = GenerateModel(schema.Name, className, definition, requestedNamespace)
+                    };
+                    try
+                    {
+                        change.PreviousSource = ReadGeneratedTarget(destination);
+                    }
+                    catch (Exception exception) when (exception is IOException ||
+                        exception is UnauthorizedAccessException || exception is InvalidOperationException)
+                    {
+                        change.BlockedReason = exception.Message.Replace(editorSecret, "[redacted]");
+                    }
+                    generatedFiles.Add(change);
                 }
-                token.ThrowIfCancellationRequested();
-                Directory.CreateDirectory(absoluteFolder);
-                foreach (var generatedFile in generatedFiles)
-                {
-                    token.ThrowIfCancellationRequested();
-                    File.WriteAllText(generatedFile.Key, generatedFile.Value, new UTF8Encoding(false));
-                }
-                AssetDatabase.Refresh();
-                status = "Generated " + generatedFiles.Count + " model(s) in " + requestedFolder + ".";
-                statusType = MessageType.Info;
+                if (generatedFiles.Count == 0)
+                    throw new InvalidOperationException("No model definitions with properties were found in the schema.");
+
+                preview = generatedFiles;
+                previewFolder = requestedFolder;
+                selectedModel = 0;
+                var creates = preview.FindAll(model => model.Action == "Create").Count;
+                var updates = preview.FindAll(model => model.Action == "Update").Count;
+                var blocked = preview.FindAll(model => model.Action == "Blocked").Count;
+                status = creates + " to create, " + updates + " to update, " +
+                    (preview.Count - creates - updates - blocked) + " unchanged." +
+                    (blocked == 0 ? string.Empty : " Resolve " + blocked + " blocked destinations and fetch again.") +
+                    (skipped == 0 ? string.Empty : " Skipped " + skipped + " definitions without properties.");
+                statusType = blocked == 0 ? MessageType.Info : MessageType.Warning;
             }
             catch (OperationCanceledException)
             {
@@ -233,7 +376,12 @@ namespace Supabase.Unity.Editor
             }
             catch (Exception exception)
             {
-                status = "Error: " + SupabaseHttp.Redact(exception.Message);
+                var message = exception is Newtonsoft.Json.JsonException
+                    ? "The endpoint did not return a valid OpenAPI schema."
+                    : exception.Message;
+                if (!string.IsNullOrEmpty(editorSecret))
+                    message = message.Replace(editorSecret, "[redacted]");
+                status = "Error: " + SupabaseHttp.Redact(message);
                 statusType = MessageType.Error;
             }
             finally
@@ -247,6 +395,75 @@ namespace Supabase.Unity.Editor
             }
         }
 
+        private bool CanApplyPreview()
+        {
+            return preview != null && !generating && !preview.Exists(model => model.BlockedReason != null) &&
+                preview.Exists(model => model.Source != model.PreviousSource);
+        }
+
+        internal void ApplyPreview()
+        {
+            if (!CanApplyPreview())
+                return;
+
+            var models = preview;
+            preview = null;
+            var written = new List<string>();
+            try
+            {
+                var folder = ResolveOutputFolder(previewFolder);
+                foreach (var model in models)
+                {
+                    if (!string.Equals(Path.GetDirectoryName(model.Path), folder, StringComparison.Ordinal) ||
+                        ReadGeneratedTarget(model.Path) != model.PreviousSource)
+                        throw new InvalidOperationException("The destination changed after preview: " + model.Path);
+                }
+
+                foreach (var model in models)
+                {
+                    if (model.Action == "Unchanged")
+                        continue;
+                    Directory.CreateDirectory(ResolveOutputFolder(previewFolder));
+                    WriteModel(model);
+                    written.Add(model.Path);
+                }
+                status = "Wrote " + written.Count + " model file(s) in " + previewFolder + ".";
+                statusType = MessageType.Info;
+            }
+            catch (Exception exception)
+            {
+                status = "Error: " + exception.Message + "\nFetch the schema again before retrying.";
+                if (written.Count > 0)
+                    status += "\nFiles written:\n" + string.Join("\n", written);
+                statusType = MessageType.Error;
+            }
+            finally
+            {
+                if (written.Count > 0)
+                    AssetDatabase.Refresh();
+            }
+        }
+
+        private static void WriteModel(ModelChange model)
+        {
+            if (ReadGeneratedTarget(model.Path) != model.PreviousSource)
+                throw new InvalidOperationException("The destination changed after preview: " + model.Path);
+            var temporary = model.Path + "." + Guid.NewGuid().ToString("N") + ".tmp";
+            try
+            {
+                File.WriteAllText(temporary, model.Source, new UTF8Encoding(false));
+                if (model.PreviousSource == null)
+                    File.Move(temporary, model.Path);
+                else
+                    File.Replace(temporary, model.Path, null);
+            }
+            finally
+            {
+                if (File.Exists(temporary))
+                    File.Delete(temporary);
+            }
+        }
+
         internal static string ResolveOutputFolder(string configuredFolder)
         {
             if (string.IsNullOrWhiteSpace(configuredFolder))
@@ -256,22 +473,49 @@ namespace Supabase.Unity.Editor
             var projectRoot = Directory.GetParent(assetsRoot).FullName;
             var absoluteFolder = Path.GetFullPath(Path.Combine(projectRoot, configuredFolder));
             var assetsPrefix = assetsRoot + Path.DirectorySeparatorChar;
-            if (!string.Equals(absoluteFolder, assetsRoot, StringComparison.OrdinalIgnoreCase) &&
-                !absoluteFolder.StartsWith(assetsPrefix, StringComparison.OrdinalIgnoreCase))
+            absoluteFolder = absoluteFolder.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            if (!string.Equals(absoluteFolder, assetsRoot, StringComparison.Ordinal) &&
+                !absoluteFolder.StartsWith(assetsPrefix, StringComparison.Ordinal))
                 throw new InvalidOperationException("Output Folder must resolve inside this project's Assets directory.");
+            for (var path = absoluteFolder; ; path = Path.GetDirectoryName(path))
+            {
+                var attributes = ReadPathAttributes(path);
+                if (attributes.HasValue && (attributes.Value & FileAttributes.Directory) == 0)
+                    throw new InvalidOperationException("The output folder contains a file in its path: " + path);
+                if (path == assetsRoot)
+                    break;
+            }
             return absoluteFolder;
         }
 
-        private static void EnsureSafeGeneratedTarget(string path)
+        private static FileAttributes? ReadPathAttributes(string path)
         {
-            if (!File.Exists(path))
-                return;
-            using (var reader = new StreamReader(path, Encoding.UTF8, true))
+            try
+            {
+                var attributes = File.GetAttributes(path);
+                if ((attributes & FileAttributes.ReparsePoint) != 0)
+                    throw new InvalidOperationException("Linked output paths are not supported: " + path);
+                return attributes;
+            }
+            catch (FileNotFoundException) { return null; }
+            catch (DirectoryNotFoundException) { return null; }
+        }
+
+        private static string ReadGeneratedTarget(string path)
+        {
+            var attributes = ReadPathAttributes(path);
+            if (!attributes.HasValue)
+                return null;
+            if ((attributes.Value & FileAttributes.Directory) != 0)
+                throw new InvalidOperationException("A directory occupies the model destination: " + path);
+            var source = File.ReadAllText(path);
+            using (var reader = new StringReader(source))
             {
                 if (!string.Equals(reader.ReadLine(), GeneratedMarker, StringComparison.Ordinal))
                     throw new InvalidOperationException(
                         "Refusing to overwrite a file that was not created by this generator: " + path);
             }
+            return source;
         }
 
         internal static string ValidateNamespace(string value)
@@ -334,26 +578,25 @@ namespace Supabase.Unity.Editor
 
             var builder = new StringBuilder();
             builder.AppendLine(GeneratedMarker);
-            builder.AppendLine("using System;");
-            builder.AppendLine("using System.Collections.Generic;");
-            builder.AppendLine("using Newtonsoft.Json;");
-            builder.AppendLine("using Supabase.Unity;");
-            builder.AppendLine("using UnityEngine.Scripting;");
-            builder.AppendLine();
             builder.AppendLine("namespace " + (string.IsNullOrWhiteSpace(generatedNamespace) ? "Game.Database" : generatedNamespace));
             builder.AppendLine("{");
-            builder.AppendLine("    [SupabaseTable(\"" + Escape(table) + "\")]");
-            builder.AppendLine("    [Preserve]");
+            builder.AppendLine("    [global::Supabase.Unity.SupabaseTableAttribute(\"" + Escape(table) + "\")]");
+            builder.AppendLine("    [global::UnityEngine.Scripting.PreserveAttribute]");
             builder.AppendLine("    public sealed class " + className);
             builder.AppendLine("    {");
             var properties = (JObject)definition["properties"];
+            var memberNames = new HashSet<string>(StringComparer.Ordinal) { className };
             foreach (var property in properties.Properties())
             {
-                var schema = property.Value as JObject ?? new JObject();
-                var propertyName = Identifier(property.Name, true);
-                var type = CsType(schema, required.Contains(property.Name));
-                builder.AppendLine("        [JsonProperty(\"" + Escape(property.Name) + "\")]");
-                builder.AppendLine("        [SupabaseColumn(\"" + Escape(property.Name) + "\")]");
+                var propertyName = Identifier(property.Name);
+                if (!memberNames.Add(propertyName))
+                    throw new InvalidOperationException("Column " + table + "." + property.Name +
+                        " maps to the C# name " + propertyName + ", which is already used in the model.");
+                if (!(property.Value is JObject schema))
+                    throw new InvalidOperationException("Invalid schema for " + table + "." + property.Name + ".");
+                var type = CsType(schema, required.Contains(property.Name), table + "." + property.Name);
+                builder.AppendLine("        [global::Newtonsoft.Json.JsonPropertyAttribute(\"" + Escape(property.Name) + "\")]");
+                builder.AppendLine("        [global::Supabase.Unity.SupabaseColumnAttribute(\"" + Escape(property.Name) + "\")]");
                 builder.AppendLine("        public " + type + " " + propertyName + " { get; set; }");
                 builder.AppendLine();
             }
@@ -362,30 +605,43 @@ namespace Supabase.Unity.Editor
             return builder.ToString();
         }
 
-        private static string CsType(JObject schema, bool required)
+        private static string CsType(JObject schema, bool required, string column, string inheritedFormat = null)
         {
             var type = (string)schema["type"];
-            var format = (string)schema["format"];
+            var format = (string)schema["format"] ?? inheritedFormat;
+            if (schema["$ref"] != null || schema["allOf"] != null || schema["oneOf"] != null ||
+                schema["anyOf"] != null)
+                throw new InvalidOperationException("Unsupported schema type for " + column + ".");
             string result;
-            if (type == "integer") result = format == "int64" ? "long" : "int";
+            if (format == "json" || format == "jsonb") result = "global::Newtonsoft.Json.Linq.JToken";
+            else if (type == "integer") result = format == "int64" || format == "bigint" ? "long" : "int";
             else if (type == "number") result = format == "float" ? "float" : "double";
             else if (type == "boolean") result = "bool";
-            else if (type == "array") result = "List<" + CsType(schema["items"] as JObject ?? new JObject(), true) + ">";
-            else if (type == "object") result = "Newtonsoft.Json.Linq.JObject";
-            else if (format == "uuid") result = "Guid";
-            else if (format == "date-time" || format == "timestamp with time zone") result = "DateTimeOffset";
-            else if (format == "date") result = "DateTime";
-            else result = "string";
+            else if (type == "array")
+            {
+                if (!(schema["items"] is JObject items))
+                    throw new InvalidOperationException("Missing array item schema for " + column + ".");
+                var itemFormat = format != null && format.EndsWith("[]", StringComparison.Ordinal)
+                    ? format.Substring(0, format.Length - 2)
+                    : null;
+                result = "global::System.Collections.Generic.List<" + CsType(items, true, column, itemFormat) + ">";
+            }
+            else if (type == "object") result = "global::Newtonsoft.Json.Linq.JObject";
+            else if (type == "string" && format == "uuid") result = "global::System.Guid";
+            else if (type == "string" && (format == "date-time" || format == "timestamp with time zone")) result = "global::System.DateTimeOffset";
+            else if (type == "string" && format == "date") result = "global::System.DateTime";
+            else if (type == "string") result = "string";
+            else throw new InvalidOperationException("Unsupported schema type for " + column + ".");
             if (!required && (result == "int" || result == "long" || result == "float" || result == "double" ||
-                              result == "bool" || result == "Guid" || result == "DateTime" || result == "DateTimeOffset"))
+                              result == "bool" || result == "global::System.Guid" || result == "global::System.DateTime" || result == "global::System.DateTimeOffset"))
                 result += "?";
             return result;
         }
 
-        private static string Identifier(string value, bool pascal)
+        private static string Identifier(string value)
         {
             var builder = new StringBuilder();
-            var upper = pascal;
+            var upper = true;
             foreach (var character in value ?? string.Empty)
             {
                 if (!char.IsLetterOrDigit(character)) { upper = true; continue; }
@@ -404,7 +660,10 @@ namespace Supabase.Unity.Editor
                 .Replace("\"", "\\\"")
                 .Replace("\r", "\\r")
                 .Replace("\n", "\\n")
-                .Replace("\t", "\\t");
+                .Replace("\t", "\\t")
+                .Replace("\u0085", "\\u0085")
+                .Replace("\u2028", "\\u2028")
+                .Replace("\u2029", "\\u2029");
         }
     }
 }

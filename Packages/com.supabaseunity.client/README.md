@@ -3,7 +3,7 @@
 An independent Supabase client for Unity 2021.3 and newer. The package provides Auth,
 Database, Realtime, Storage and Edge Functions APIs for WebGL, desktop and mobile projects.
 
-> `0.4.0` refines setup and Quickstart navigation while preserving the `0.2.0` runtime API
+> `0.5.0` adds Model Generator previews and preserves the `0.2.0` runtime API
 > and [Editor scripting](Documentation~/editor-scripting.md). Review the [changelog](CHANGELOG.md) before upgrading.
 
 ## Installation
@@ -12,7 +12,7 @@ In Unity 2021.3 or 2022.3, open **Window > Package Manager**. In Unity 6, open
 **Window > Package Management > Package Manager**. Select **Add package from git URL**, then enter:
 
 ```text
-https://github.com/DorukTan/unity-supabase.git?path=/Packages/com.supabaseunity.client#v0.4.0
+https://github.com/DorukTan/unity-supabase.git?path=/Packages/com.supabaseunity.client#v0.5.0
 ```
 
 Release tarballs and `.unitypackage` files are available on the
@@ -39,6 +39,17 @@ The `.unitypackage` distribution includes the same sample at
 Never put an `sb_secret_...` key, `service_role` key, database password or management token in
 a Unity project. Player builds are public clients and must be protected with Row Level
 Security, Storage policies and server-side authorization.
+
+## Generate C# models
+
+1. Open **Tools > Supabase > Model Generator**. When opened from Setup, the generator uses the project URL from the settings asset selected there.
+2. Enter a Supabase secret API key in **Secret Key (Editor only)**, set the output folder under `Assets`, and choose a namespace. The request uses the Data API's default exposed schema.
+3. Select **Fetch Schema and Preview**. Choose a file from **Model File** to review its proposed source. For updates, compare it with **Current Source**.
+4. Select **Apply Changes** to write the preview. The generator preserves Unity metadata, skips identical files, and leaves files for removed tables in place.
+
+Move or rename any handwritten file that blocks a destination, then fetch a new preview.
+If a destination changes during review, fetch again before applying. The secret key is cleared
+after the fetch and is never saved to the settings asset.
 
 ## Example
 

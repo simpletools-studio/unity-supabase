@@ -11,9 +11,9 @@ namespace Supabase.Unity.Editor
         private const string DefaultSettingsFolder = "Assets/Supabase";
         private const string DefaultSettingsPath = DefaultSettingsFolder + "/SupabaseSettings.asset";
         private const string DocumentationUrl =
-            "https://github.com/DorukTan/unity-supabase/blob/v0.4.0/Packages/com.supabaseunity.client/Documentation~/getting-started.md";
+            "https://github.com/DorukTan/unity-supabase/blob/v0.5.0/Packages/com.supabaseunity.client/Documentation~/getting-started.md";
         private const string QuickstartUrl =
-            "https://github.com/DorukTan/unity-supabase/tree/v0.4.0/Packages/com.supabaseunity.client/Samples~/Quickstart";
+            "https://github.com/DorukTan/unity-supabase/tree/v0.5.0/Packages/com.supabaseunity.client/Samples~/Quickstart";
         private const string DashboardUrl = "https://supabase.com/dashboard/projects";
         private const string PackageName = "com.supabaseunity.client";
 
@@ -289,7 +289,7 @@ namespace Supabase.Unity.Editor
             EditorGUIUtility.PingObject(asset);
         }
 
-        private static void DrawResources()
+        private void DrawResources()
         {
             EditorGUILayout.LabelField("Resources", EditorStyles.miniBoldLabel);
             EditorGUILayout.BeginHorizontal();
@@ -298,7 +298,7 @@ namespace Supabase.Unity.Editor
             if (ActionButton("Documentation", EditorStyles.miniButtonMid))
                 Application.OpenURL(DocumentationUrl);
             if (ActionButton("Model Generator", EditorStyles.miniButtonRight))
-                SupabaseModelGeneratorWindow.Open();
+                SupabaseModelGeneratorWindow.Open(settings);
             EditorGUILayout.EndHorizontal();
         }
 
