@@ -2,8 +2,8 @@
 
 Bu paket Unity 2021.3 LTS ile Unity 6 arasında aynı API ile Auth, Database, Realtime, Storage ve Edge Functions kullanmak için Unity’ye özgü bir istemci sağlar. WebGL’de tarayıcı WebSocket köprüsünü kullanır; diğer platformlarda native WebSocket kullanır. Oturum kalıcılığı varsayılan olarak kapalıdır. Açıldığında oturumlar WebGL’de `localStorage`, diğer platformlarda `persistentDataPath` altında saklanır.
 
-> `0.3.0`, `0.2.0` çalışma zamanı API'sini koruyarak Play modu dışında
-> [Editor betikleri](Documentation~/editor-scripting.md) desteği ekler. Yükseltmeden önce
+> `0.4.0`, kurulum ekranını ve Quickstart gezinmesini iyileştirir. `0.2.0` çalışma zamanı API'si
+> ve [Editor betikleri](Documentation~/editor-scripting.md) desteği korunur. Yükseltmeden önce
 > [değişiklik günlüğünü](CHANGELOG.md) kontrol et.
 
 ## Hızlı başlangıç
@@ -11,10 +11,15 @@ Bu paket Unity 2021.3 LTS ile Unity 6 arasında aynı API ile Auth, Database, Re
 Package Manager’da **Add package from git URL** seçeneğine şunu gir:
 
 ```text
-https://github.com/DorukTan/unity-supabase.git?path=/Packages/com.supabaseunity.client#v0.3.0
+https://github.com/DorukTan/unity-supabase.git?path=/Packages/com.supabaseunity.client#v0.4.0
 ```
 
 Ardından **Tools > Supabase > Setup** ekranını açıp ayar dosyasını oluştur. Supabase Dashboard’daki **Connect** ekranından proje URL’sini ve `sb_publishable_...` anahtarını al, sonra **Test Project Connection** düğmesine bas. Bu test bağlantıyı ve anahtarı kontrol eder; RLS kurallarını değiştirmez. Eski `anon` JWT anahtarları da desteklenir.
+
+Seçilen ayar dosyasının yolu Setup ekranında gösterilir. Oturum kalıcılığı, otomatik token
+yenileme, Realtime başlangıcı ve istek zaman aşımı ayarları, Setup ve Inspector içindeki
+**Runtime options** bölümündedir. Oturum kalıcılığı açıksa, bu bölüm kapalıyken de depolama
+uyarısı görünür. Ayarları değiştirmek önceki bağlantı sonucunu temizler.
 
 ```csharp
 using Supabase.Unity;
@@ -83,7 +88,16 @@ await channel.SubscribeAsync();
 
 Önemli: Unity uygulamasına hiçbir zaman `sb_secret_...` veya `service_role` anahtarı koyma. Bunlar derlenen oyuncu tarafından çıkarılabilir. İstemci güvenliği publishable/anon anahtarını saklamaya değil, Supabase RLS ve Storage policy kurallarına dayanır. Paket bu anahtarları ayar dosyasında fark ederse build’i durdurur.
 
-Package Manager’daki **Samples** bölümünden içe aktarılabilen `Quickstart` örneği artık gerekli SQL dosyasını, Database sorgusunu, Realtime aboneliğini ve kurulum adımlarını birlikte içeriyor. Bir sorun yaşarsan `Documentation~/troubleshooting.md` dosyasındaki hata rehberinden başlayabilirsin.
+UPM kurulumu kullanıyorsan Package Manager’daki **Samples** bölümünden **Quickstart** örneğini
+içe aktar. `.unitypackage` kurulumu aynı örneği `Assets/SupabaseUnity/Samples/Quickstart`
+altında içerir. Setup ekranındaki **Show setup.sql** düğmesiyle SQL dosyasını bul ve içeriğini
+Supabase SQL Editor’da çalıştır. **Open Quickstart Scene** ile sahneyi aç, Quickstart nesnesine
+ayar dosyasını ata ve Play moduna geç. Sahne açılırken Unity, kaydedilmemiş sahne değişikliklerini
+sorar; **Cancel** mevcut sahneyi açık bırakır. Play modunda sahne açma düğmesi devre dışıdır.
+
+Eski bir örnek kopyasında sahne yoksa `SupabaseQuickstart` bileşenini bir GameObject’e ekleyip
+ayar dosyasını atayabilirsin. Birden çok örnek kopyası varsa Setup, kullandığı yolu gösterir.
+Bir sorun yaşarsan [hata rehberinden](Documentation~/troubleshooting.md) başlayabilirsin.
 
 ## Play modu dışında Editor betikleri
 

@@ -8,6 +8,7 @@ namespace Supabase.Unity
 {
     public sealed class WebGlWebSocketTransport : IWebSocketTransport
     {
+        // Keep IDs unique across Play sessions so late browser callbacks cannot target a new socket.
         private static int nextId;
         private readonly int id;
         private bool disposed;

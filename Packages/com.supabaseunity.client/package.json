@@ -1,13 +1,13 @@
 {
   "name": "com.supabaseunity.client",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "displayName": "Supabase for Unity",
   "description": "A Unity-first Supabase client for WebGL, desktop and mobile platforms.",
   "unity": "2021.3",
   "license": "MIT",
-  "documentationUrl": "https://github.com/DorukTan/unity-supabase/tree/v0.3.0/Packages/com.supabaseunity.client/Documentation~",
-  "changelogUrl": "https://github.com/DorukTan/unity-supabase/blob/v0.3.0/Packages/com.supabaseunity.client/CHANGELOG.md",
-  "licensesUrl": "https://github.com/DorukTan/unity-supabase/blob/v0.3.0/Packages/com.supabaseunity.client/LICENSE.md",
+  "documentationUrl": "https://github.com/DorukTan/unity-supabase/tree/v0.4.0/Packages/com.supabaseunity.client/Documentation~",
+  "changelogUrl": "https://github.com/DorukTan/unity-supabase/blob/v0.4.0/Packages/com.supabaseunity.client/CHANGELOG.md",
+  "licensesUrl": "https://github.com/DorukTan/unity-supabase/blob/v0.4.0/Packages/com.supabaseunity.client/LICENSE.md",
   "repository": {
     "type": "git",
     "url": "https://github.com/DorukTan/unity-supabase.git"
@@ -25,13 +25,13 @@
     "webgl"
   ],
   "author": {
-    "name": "Supabase for Unity contributors",
+    "name": "SimpleTools",
     "url": "https://github.com/DorukTan/unity-supabase/graphs/contributors"
   },
   "samples": [
     {
       "displayName": "Quickstart",
-      "description": "Runnable Database and Realtime starter with setup SQL.",
+      "description": "Demo scene with Database and Realtime examples and setup SQL.",
       "path": "Samples~/Quickstart"
     }
   ]

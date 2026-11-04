@@ -20,6 +20,16 @@ SPEC.loader.exec_module(BUILD_RELEASE)
 
 
 class ReleaseArchiveTests(unittest.TestCase):
+    def test_demo_scene_keeps_its_script_reference_in_unitypackage(self) -> None:
+        assets = {asset.pathname: asset for asset in BUILD_RELEASE.unity_assets()}
+        sample_root = "Assets/SupabaseUnity/Samples/Quickstart/"
+        script = assets[sample_root + "SupabaseQuickstart.cs"]
+        scene = assets[sample_root + "Quickstart.unity"]
+        source_meta = BUILD_RELEASE.PACKAGE / "Samples~/Quickstart/SupabaseQuickstart.cs.meta"
+        self.assertEqual(script.guid, BUILD_RELEASE.read_guid(source_meta))
+        self.assertIn(f"guid: {script.guid}", scene.source.read_text())
+        self.assertEqual(script.meta, BUILD_RELEASE.read_source_bytes(source_meta))
+
     def test_upm_archive_normalizes_txt_line_endings(self) -> None:
         original_package = BUILD_RELEASE.PACKAGE
         try:

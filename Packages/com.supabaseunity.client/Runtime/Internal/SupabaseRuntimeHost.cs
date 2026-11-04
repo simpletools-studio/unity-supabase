@@ -21,6 +21,22 @@ namespace Supabase.Unity
         internal static event Action<int, int, string> WebSocketClosed;
         internal static event Action<int, string> WebSocketError;
 
+        // SubsystemRegistration runs on every Play entry, including when Domain Reload is disabled.
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        internal static void ResetState()
+        {
+            mainThreadId = Thread.CurrentThread.ManagedThreadId;
+            lock (Gate) Pending.Clear();
+            FocusChanged = null;
+            WebSocketOpened = null;
+            WebSocketMessage = null;
+            WebSocketClosed = null;
+            WebSocketError = null;
+            // Unity destroys the hidden runtime host on Play exit, even without Scene Reload.
+            // Discard its reference before the next session creates a host.
+            instance = null;
+        }
+
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void Bootstrap()
         {

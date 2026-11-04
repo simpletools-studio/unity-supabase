@@ -11,15 +11,19 @@ namespace Supabase.Unity.Editor
         private const string DefaultSettingsFolder = "Assets/Supabase";
         private const string DefaultSettingsPath = DefaultSettingsFolder + "/SupabaseSettings.asset";
         private const string DocumentationUrl =
-            "https://github.com/DorukTan/unity-supabase/blob/v0.3.0/Packages/com.supabaseunity.client/Documentation~/getting-started.md";
+            "https://github.com/DorukTan/unity-supabase/blob/v0.4.0/Packages/com.supabaseunity.client/Documentation~/getting-started.md";
         private const string QuickstartUrl =
-            "https://github.com/DorukTan/unity-supabase/tree/v0.3.0/Packages/com.supabaseunity.client/Samples~/Quickstart";
+            "https://github.com/DorukTan/unity-supabase/tree/v0.4.0/Packages/com.supabaseunity.client/Samples~/Quickstart";
         private const string DashboardUrl = "https://supabase.com/dashboard/projects";
         private const string PackageName = "com.supabaseunity.client";
 
         private SupabaseSettings settings;
         private Vector2 scrollPosition;
         private bool testingConnection;
+        private bool showRuntimeOptions;
+        private bool quickstartSearched;
+        private SupabaseQuickstartAssets quickstartAssets;
+        private string quickstartNotice;
         private string configurationNotice;
         private string connectionStatus;
         private MessageType connectionStatusType = MessageType.None;
@@ -66,6 +70,18 @@ namespace Supabase.Unity.Editor
             InvalidateConnection();
         }
 
+        private void OnProjectChange()
+        {
+            quickstartSearched = false;
+            quickstartNotice = null;
+            Repaint();
+        }
+
+        private void OnFocus()
+        {
+            quickstartSearched = false;
+        }
+
         private void OnGUI()
         {
             SynchronizeConnectionStatus();
@@ -91,7 +107,7 @@ namespace Supabase.Unity.Editor
         private static void DrawHeader()
         {
             GUILayout.Label(
-                "Connect the project, verify the connection, and run the Quickstart.",
+                "Configure the client, check the connection, and run the Quickstart.",
                 EditorStyles.wordWrappedLabel);
             EditorGUILayout.Space(EditorGUIUtility.standardVerticalSpacing);
             GUILayout.Label(
@@ -108,7 +124,7 @@ namespace Supabase.Unity.Editor
 
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
             DrawSectionHeader(
-                "1", "Configure the client",
+                "1", "Client settings",
                 settings == null ? "Not configured" : configurationValid ? "Ready" : "Needs attention");
             EditorGUILayout.Space(EditorGUIUtility.standardVerticalSpacing);
 
@@ -131,9 +147,9 @@ namespace Supabase.Unity.Editor
                     "Create a settings asset, or select one that is already in the project.",
                     EditorStyles.wordWrappedMiniLabel);
                 EditorGUILayout.Space(EditorGUIUtility.standardVerticalSpacing);
-                if (GUILayout.Button("Create Settings Asset", GUILayout.Height(PrimaryButtonHeight)))
+                if (ActionButton("Create Settings Asset", GUILayout.Height(PrimaryButtonHeight)))
                     CreateSettingsAsset();
-                if (GUILayout.Button("Find Existing Settings"))
+                if (ActionButton("Find Existing Settings"))
                 {
                     FindSettings();
                     configurationNotice = settings == null
@@ -146,22 +162,18 @@ namespace Supabase.Unity.Editor
                 return;
             }
 
+            GUILayout.Label(AssetDatabase.GetAssetPath(settings), EditorStyles.wordWrappedMiniLabel);
             EditorGUI.BeginDisabledGroup(testingConnection);
-            EditorGUI.BeginChangeCheck();
-            SupabaseSettingsInspectorGui.DrawFields(new SerializedObject(settings));
-            if (EditorGUI.EndChangeCheck())
+            if (SupabaseSettingsInspectorGui.DrawFields(new SerializedObject(settings), ref showRuntimeOptions))
                 InvalidateConnection();
             EditorGUI.EndDisabledGroup();
+            configurationValid = SupabaseSettingsInspectorGui.TryValidate(settings, out options, out validationError);
 
             if (configurationValid)
             {
                 configurationNotice = null;
                 EditorGUILayout.HelpBox(
                     "Configuration looks valid. Test the connection when you are ready.", MessageType.Info);
-                if (options.PersistSession)
-                    EditorGUILayout.HelpBox(
-                        SupabaseSettingsInspectorGui.PersistenceWarning,
-                        MessageType.Warning);
             }
             else
             {
@@ -170,7 +182,7 @@ namespace Supabase.Unity.Editor
 
             if (!string.IsNullOrEmpty(configurationNotice))
                 EditorGUILayout.HelpBox(configurationNotice, MessageType.Info);
-            if (GUILayout.Button("Show Settings Asset"))
+            if (ActionButton("Show Settings Asset"))
             {
                 Selection.activeObject = settings;
                 EditorGUIUtility.PingObject(settings);
@@ -189,11 +201,11 @@ namespace Supabase.Unity.Editor
                 : connectionStatusType == MessageType.Error
                     ? "Check failed"
                     : !string.IsNullOrEmpty(connectionStatus)
-                        ? "Connected"
+                        ? "Connection verified"
                         : configurationValid ? "Ready" : "Waiting";
 
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-            DrawSectionHeader("2", "Test the connection", connectionState);
+            DrawSectionHeader("2", "Check the connection", connectionState);
             EditorGUILayout.Space(EditorGUIUtility.standardVerticalSpacing);
             GUILayout.Label(
                 "Checks the URL and publishable key against Supabase Auth. It does not test tables or RLS.",
@@ -202,7 +214,7 @@ namespace Supabase.Unity.Editor
 
             var canTest = configurationValid && !testingConnection;
             EditorGUI.BeginDisabledGroup(!canTest);
-            if (GUILayout.Button(
+            if (ActionButton(
                     testingConnection ? "Testing..." : "Test Project Connection",
                     GUILayout.Height(PrimaryButtonHeight)))
                 TestConnection();
@@ -219,52 +231,114 @@ namespace Supabase.Unity.Editor
 
         private void DrawQuickstartStep()
         {
-            var quickstart = FindImportedQuickstart();
+            if (!quickstartSearched)
+            {
+                quickstartAssets = SupabaseQuickstartAssets.FindImported();
+                quickstartSearched = true;
+            }
+            var sample = quickstartAssets;
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-            DrawSectionHeader("3", "Run the Quickstart", quickstart == null ? "Not imported" : "Imported");
-            EditorGUILayout.Space(EditorGUIUtility.standardVerticalSpacing);
-            GUILayout.Label(
-                quickstart == null
-                    ? "Import the Quickstart sample from Package Manager, run setup.sql, then add its component to a GameObject."
-                    : "Run the imported setup.sql, then add SupabaseQuickstart to a GameObject and assign the settings asset.",
+            DrawSectionHeader("3", "Run the Quickstart", sample == null ? "Not imported" : "Imported");
+            GUILayout.Label(sample == null
+                    ? "Import Quickstart from the package's Samples tab, then follow its SQL and scene setup instructions."
+                    : sample.ScenePath != null
+                        ? "Run setup.sql in the Supabase SQL Editor. Open the sample scene, assign settings to the Quickstart object, then press Play."
+                        : "This imported sample has no demo scene. Run setup.sql, add SupabaseQuickstart to a GameObject, and assign settings. See the guide for details.",
                 EditorStyles.wordWrappedMiniLabel);
-            EditorGUILayout.Space(EditorGUIUtility.standardVerticalSpacing);
-
-            if (quickstart != null)
+            if (sample != null)
             {
-                if (GUILayout.Button("Show Imported Quickstart", GUILayout.Height(PrimaryButtonHeight)))
+                GUILayout.Label(sample.ScenePath ?? sample.ScriptPath, EditorStyles.wordWrappedMiniLabel);
+                if (sample.CopyCount > 1)
+                    GUILayout.Label("Multiple sample copies found. Using the path shown above.", EditorStyles.wordWrappedMiniLabel);
+                if (sample.ScenePath != null)
                 {
-                    Selection.activeObject = quickstart;
-                    EditorGUIUtility.PingObject(quickstart);
+                    EditorGUI.BeginDisabledGroup(EditorApplication.isPlayingOrWillChangePlaymode);
+                    if (ActionButton("Open Quickstart Scene"))
+                    {
+                        try
+                        {
+                            if (!sample.OpenScene())
+                                quickstartNotice = "Scene opening was cancelled or is unavailable. The current scene was not replaced.";
+                            else quickstartNotice = null;
+                        }
+                        catch (Exception exception)
+                        {
+                            quickstartNotice = "Could not open the Quickstart scene: " + SupabaseHttp.Redact(exception.Message);
+                        }
+                    }
+                    EditorGUI.EndDisabledGroup();
+                    if (EditorApplication.isPlayingOrWillChangePlaymode)
+                        GUILayout.Label("Exit Play mode before opening the sample scene.", EditorStyles.wordWrappedMiniLabel);
                 }
+                else if (ActionButton("Show Imported Quickstart")) ShowAsset(sample.ScriptPath);
+                if (sample.SqlPath != null && ActionButton("Show setup.sql")) ShowAsset(sample.SqlPath);
             }
-            else if (GUILayout.Button("Open Package Manager", GUILayout.Height(PrimaryButtonHeight)))
-            {
+            else if (ActionButton("Open Package Manager"))
                 UnityEditor.PackageManager.UI.Window.Open(PackageName);
-            }
-            if (GUILayout.Button("Read the Quickstart Guide"))
-                Application.OpenURL(QuickstartUrl);
+            if (ActionButton("Read the Quickstart Guide")) Application.OpenURL(QuickstartUrl);
+            if (!string.IsNullOrEmpty(quickstartNotice))
+                EditorGUILayout.HelpBox(quickstartNotice, MessageType.Info);
             EditorGUILayout.EndVertical();
+        }
+
+        private static void ShowAsset(string path)
+        {
+            var asset = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(path);
+            if (asset == null) return;
+            Selection.activeObject = asset;
+            EditorGUIUtility.PingObject(asset);
         }
 
         private static void DrawResources()
         {
             EditorGUILayout.LabelField("Resources", EditorStyles.miniBoldLabel);
             EditorGUILayout.BeginHorizontal();
-            if (GUILayout.Button("Dashboard", EditorStyles.miniButtonLeft))
+            if (ActionButton("Dashboard", EditorStyles.miniButtonLeft))
                 Application.OpenURL(DashboardUrl);
-            if (GUILayout.Button("Documentation", EditorStyles.miniButtonMid))
+            if (ActionButton("Documentation", EditorStyles.miniButtonMid))
                 Application.OpenURL(DocumentationUrl);
-            if (GUILayout.Button("Model Generator", EditorStyles.miniButtonRight))
+            if (ActionButton("Model Generator", EditorStyles.miniButtonRight))
                 SupabaseModelGeneratorWindow.Open();
             EditorGUILayout.EndHorizontal();
         }
 
+        internal static bool ActionButton(string label, params GUILayoutOption[] options)
+        {
+            return ActionButton(label, GUI.skin.button, options);
+        }
+
+        private static bool ActionButton(string label, GUIStyle style, params GUILayoutOption[] options)
+        {
+            var content = new GUIContent(label);
+            var rect = GUILayoutUtility.GetRect(content, style, options);
+            var id = GUIUtility.GetControlID(GUI.enabled ? FocusType.Keyboard : FocusType.Passive, rect);
+            var previousChanged = GUI.changed;
+            // A momentary toggle uses Unity's native mouse and keyboard handling with button styling.
+            var activated = GUI.Toggle(rect, id, false, content, style);
+            GUI.changed = previousChanged;
+            if (Event.current.type == EventType.Repaint)
+            {
+                var focus = (ActionFocus)GUIUtility.GetStateObject(typeof(ActionFocus), id);
+                var focused = GUI.enabled && GUIUtility.keyboardControl == id;
+                if (focused && !focus.WasFocused)
+                {
+                    GUI.ScrollTo(rect);
+                    EditorWindow.focusedWindow?.Repaint();
+                }
+                focus.WasFocused = focused;
+            }
+            return activated;
+        }
+
+        private sealed class ActionFocus
+        {
+            public bool WasFocused;
+        }
+
         private static void DrawSectionHeader(string number, string title, string status)
         {
-            GUILayout.Label(
-                number + ". " + title + "  -  " + status,
-                EditorStyles.boldLabel);
+            GUILayout.Label(number + ". " + title, EditorStyles.boldLabel);
+            GUILayout.Label(status, EditorStyles.wordWrappedMiniLabel);
         }
 
         private void CreateSettingsAsset()
@@ -298,16 +372,6 @@ namespace Supabase.Unity.Editor
             settings = paths.Length == 0
                 ? null
                 : AssetDatabase.LoadAssetAtPath<SupabaseSettings>(paths[0]);
-        }
-
-        private static UnityEngine.Object FindImportedQuickstart()
-        {
-            var guids = AssetDatabase.FindAssets("SupabaseQuickstart t:MonoScript", new[] { "Assets" });
-            if (guids.Length == 0)
-                return null;
-            Array.Sort(guids, StringComparer.Ordinal);
-            return AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(
-                AssetDatabase.GUIDToAssetPath(guids[0]));
         }
 
         private async void TestConnection()
