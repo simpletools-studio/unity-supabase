@@ -172,7 +172,8 @@ namespace Supabase.Unity
             StorageListOptions listOptions = null,
             CancellationToken cancellationToken = default(CancellationToken))
         {
-            var body = JObject.FromObject(listOptions ?? new StorageListOptions());
+            var body = JObject.FromObject(listOptions ?? new StorageListOptions(),
+                Newtonsoft.Json.JsonSerializer.Create(SupabaseJson.Settings));
             body["prefix"] = prefix ?? string.Empty;
             return JsonAsync<IReadOnlyList<StorageObject>>(SupabaseHttpMethod.Post,
                 "object/list/" + SupabaseHttp.EscapePath(BucketId), body, cancellationToken);

@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.7.0] - 2026-11-05
+
+### Fixed
+
+- Place the search configuration inside the PostgREST full-text operator.
+- Encode C# collections as PostgreSQL array literals for containment and overlap filters; use explicit `JArray` values for JSONB arrays.
+- Omit unset Storage listing options instead of sending JSON null values that the service rejects.
+
+### Added
+
+- Focused Database, Storage, Functions, and Auth request/response contract tests.
+- Bounded local acceptance scenarios for service operations, two-user Database/Storage isolation, and two-client Broadcast/Presence.
+- Service compatibility notes distinguishing fixture coverage, local integration results, and provider-dependent flows.
+
+### Changed
+
+- Attempt acceptance fixture cleanup after failures and report cleanup problems separately.
+
 ## [0.6.0] - 2026-11-04
 
 ### Added

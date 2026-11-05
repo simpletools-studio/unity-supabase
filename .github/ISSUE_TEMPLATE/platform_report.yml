@@ -57,7 +57,7 @@ body:
     id: versions
     attributes:
       label: Unity and package version
-      placeholder: Unity 6000.6.7f1, package 0.6.0
+      placeholder: Unity 6000.6.7f1, package 0.7.0
     validations:
       required: true
 
