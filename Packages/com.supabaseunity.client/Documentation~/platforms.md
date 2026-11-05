@@ -28,7 +28,7 @@
 | Runtime check | A named behavior ran in a browser, player, or on a device. The result applies to that environment and behavior. |
 | Live service check | A named operation ran against a real Supabase project. |
 
-## Results for 0.6.0
+## Results for 0.7.0
 
 | Target | Recorded check | Further coverage |
 | --- | --- | --- |

@@ -185,8 +185,8 @@ namespace Supabase.Unity
             string type = null)
         {
             var op = string.IsNullOrWhiteSpace(type) ? "fts" : type.Trim().ToLowerInvariant();
-            var value = string.IsNullOrWhiteSpace(config) ? query : "(" + config + ")." + query;
-            parameters.Add(new KeyValuePair<string, string>(column, op + "." + value));
+            if (!string.IsNullOrWhiteSpace(config)) op += "(" + config + ")";
+            parameters.Add(new KeyValuePair<string, string>(column, op + "." + query));
             return this;
         }
 
@@ -458,9 +458,29 @@ namespace Supabase.Unity
                 foreach (var item in token) items.Add(Scalar(item.ToObject<object>()));
                 return "(" + string.Join(",", items.ToArray()) + ")";
             }
+            if ((op == PostgrestFilterOperator.Contains || op == PostgrestFilterOperator.ContainedBy ||
+                 op == PostgrestFilterOperator.Overlaps) && !(value is JToken) &&
+                !(value is System.Collections.IDictionary) &&
+                value is System.Collections.IEnumerable && !(value is string))
+                return ArrayLiteral((System.Collections.IEnumerable)value);
             if (value is System.Collections.IEnumerable && !(value is string))
                 return SupabaseJson.Serialize(value);
             return Scalar(value);
+        }
+
+        private static string ArrayLiteral(System.Collections.IEnumerable values)
+        {
+            var items = new List<string>();
+            foreach (var item in values)
+            {
+                if (item == null) items.Add("NULL");
+                else
+                {
+                    var text = Convert.ToString(item, CultureInfo.InvariantCulture);
+                    items.Add("\"" + text.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"");
+                }
+            }
+            return "{" + string.Join(",", items.ToArray()) + "}";
         }
 
         private static string Scalar(object value)
