@@ -26,6 +26,7 @@ namespace Supabase.Unity
             ThrowIfDisposed();
             if (State == SupabaseWebSocketState.Open || State == SupabaseWebSocketState.Connecting)
                 return;
+            cancellationToken.ThrowIfCancellationRequested();
             State = SupabaseWebSocketState.Connecting;
             socket = new ClientWebSocket();
             if (headers != null)
@@ -43,6 +44,15 @@ namespace Supabase.Unity
                 State = SupabaseWebSocketState.Open;
                 Raise(Opened);
                 ReceiveLoopAsync(lifetime.Token).Forget(RaiseError);
+            }
+            catch (Exception exception) when (cancellationToken.IsCancellationRequested &&
+                (exception is OperationCanceledException || exception is WebSocketException))
+            {
+                socket.Dispose();
+                socket = null;
+                State = SupabaseWebSocketState.Closed;
+                cancellationToken.ThrowIfCancellationRequested();
+                throw;
             }
             catch
             {

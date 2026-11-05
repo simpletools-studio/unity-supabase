@@ -1,12 +1,12 @@
 {
   "schemaVersion": 2,
-  "packageVersion": "0.5.0",
-  "verifiedAtUtc": "2026-11-04T12:59:09Z",
+  "packageVersion": "0.6.0",
+  "verifiedAtUtc": "2026-11-04T16:39:42Z",
   "unity": {
     "editorVersion": "6000.6.7f1",
     "editModeTests": {
-      "total": 162,
-      "passed": 162,
+      "total": 164,
+      "passed": 164,
       "failed": 0,
       "skipped": 0,
       "inconclusive": 0
@@ -15,12 +15,13 @@
     "playerBuilds": {
       "webgl": "passed",
       "windows": "passed",
+      "linux": "passed",
       "android": "passed",
       "iosXcodeProject": "passed"
     }
   },
   "archives": {
-    "com.supabaseunity.client-0.5.0.tgz": "3361bb4c63f3c47fccea51f898e72c3a1711a2e0ca8b1a0976232f9c6336420d",
-    "com.supabaseunity.client-0.5.0.unitypackage": "c45f3b9756781c7c19f95f524266ac905f993662ba3fa1f18914221b9fb295c9"
+    "com.supabaseunity.client-0.6.0.tgz": "a8bfa0f6b9ae1550b186d60978ddc4f50ac10447ffb9c3a0a27bbc8040e55174",
+    "com.supabaseunity.client-0.6.0.unitypackage": "025d77ac314ede7d7b1ff635d165bdf85883b6a1638b038c1a5d90f5d6784a7f"
   }
 }

@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.6.0] - 2026-11-04
+
+### Added
+
+- Record the Linux x64 smoke build alongside the other release verification results.
+
+### Changed
+
+- Separate Editor tests, player builds, Xcode export, and runtime checks in the platform guide.
+- Ask platform reports to identify how the result was verified and which behaviors were exercised.
+
+### Fixed
+
+- Report native WebSocket connection cancellation consistently on Unity's Mono runtime.
+
 ## [0.5.0] - 2026-11-04
 
 ### Added

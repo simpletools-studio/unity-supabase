@@ -79,8 +79,13 @@ def build_notes(
         assert isinstance(tests, dict)
         player_builds = unity.get("playerBuilds")
         if isinstance(player_builds, dict):
+            platforms = (
+                "WebGL, Windows, Linux x64, and Android"
+                if "linux" in player_builds
+                else "WebGL, Windows, and Android"
+            )
             player_build_summary = (
-                "- WebGL, Windows, and Android smoke players built successfully.\n"
+                f"- {platforms} smoke players built successfully.\n"
                 "- Unity generated the iOS Xcode project successfully."
             )
         else:

@@ -32,6 +32,8 @@ secrets.
 5. Commit `.github/release-verification.json`.
 6. Create and push the matching `v<version>` tag.
 
+Pass `--linux` to include a Linux x64 smoke build when Linux Build Support (Mono) is installed.
+
 Use `UNITY_PATH=/path/to/Unity` or `--unity /path/to/Unity` if the editor is not installed in
 Unity Hub's default location.
 

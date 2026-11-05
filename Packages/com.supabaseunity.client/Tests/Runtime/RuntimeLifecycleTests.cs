@@ -1,13 +1,56 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Threading;
 using NUnit.Framework;
+using UnityEngine;
+using UnityEngine.TestTools;
 
 namespace Supabase.Unity.Tests
 {
     public sealed class RuntimeLifecycleTests
     {
+        [UnityTest]
+        public IEnumerator FocusReturn_RefreshesAnExpiringSession()
+        {
+            var transport = new RecordingHttpTransport()
+                .Enqueue(200, AuthTests.SessionJson.Replace("3600", "30"))
+                .Enqueue(200, AuthTests.SessionJson.Replace("access-one", "access-two"));
+            var options = ConfigurationTests.ValidOptions();
+            options.HttpTransport = transport;
+            options.AutoRefreshToken = false;
+            var gameObject = new GameObject("Focus routing test");
+            try
+            {
+                using (var client = new SupabaseClient(options))
+                {
+                    var signIn = client.Auth.SignInWithPasswordAsync("a@b.co", "fixture-password");
+                    Assert.IsTrue(signIn.GetAwaiter().GetResult().IsSuccess);
+                    var host = gameObject.AddComponent<SupabaseRuntimeHost>();
+                    var callback = typeof(SupabaseRuntimeHost).GetMethod("OnApplicationFocus",
+                        BindingFlags.Instance | BindingFlags.NonPublic);
+
+                    callback.Invoke(host, new object[] { false });
+                    Assert.AreEqual(1, transport.Requests.Count);
+                    callback.Invoke(host, new object[] { true });
+
+                    var deadline = Time.realtimeSinceStartup + 5;
+                    while (client.Auth.CurrentSession.AccessToken != "access-two" &&
+                        Time.realtimeSinceStartup < deadline)
+                        yield return null;
+
+                    Assert.AreEqual("access-two", client.Auth.CurrentSession.AccessToken);
+                    Assert.AreEqual(2, transport.Requests.Count);
+                    StringAssert.Contains("grant_type=refresh_token", transport.LastRequest.Uri.Query);
+                }
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(gameObject);
+            }
+        }
+
         [Test]
         public void NextPlaySession_DiscardsQueuedWorkAndEventSubscribers()
         {

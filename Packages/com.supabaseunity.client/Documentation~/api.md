@@ -197,7 +197,7 @@ For IL2CPP builds, model members used only through reflection must be preserved.
 
 ## API stability
 
-`0.5.0` preserves the runtime API published in `0.2.0`. A compatibility test records the
+`0.6.0` preserves the runtime API published in `0.2.0`. A compatibility test records the
 approved types, members, enum values, optional defaults, generic constraints, and declared
 interfaces. The Editor client factory lives in the separate Editor assembly and does not
 change the player API.

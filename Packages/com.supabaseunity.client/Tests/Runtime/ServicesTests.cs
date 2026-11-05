@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 
@@ -14,6 +15,20 @@ namespace Supabase.Unity.Tests
         private sealed class ReliabilityRow
         {
             [SupabaseColumn("id")] public int Id { get; set; }
+        }
+
+        [Test]
+        public void NativeWebSocketConnect_PreCancelledTokenLeavesTransportClosed()
+        {
+            using (var socket = new NativeWebSocketTransport())
+            using (var cancellation = new CancellationTokenSource())
+            {
+                cancellation.Cancel();
+                var connection = socket.ConnectAsync(new Uri("ws://127.0.0.1:1"), null, cancellation.Token);
+                Assert.IsTrue(connection.IsCompleted);
+                Assert.Catch<OperationCanceledException>(() => connection.GetAwaiter().GetResult());
+                Assert.AreEqual(SupabaseWebSocketState.Closed, socket.State);
+            }
         }
 
         [Test]
