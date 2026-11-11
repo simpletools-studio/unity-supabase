@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.8.0] - 2026-11-11
+
+### Fixed
+
+- Cancel requests on the default runtime HTTP transport when its owner is disposed.
+- Settle pending runtime requests and timers when Unity stops Play mode or destroys the runtime host.
+- Cancel a pending Realtime connection on disposal and keep the connection closed after a manual disconnect.
+- Release acknowledgement timers when a Realtime push completes.
+- Preserve generated model properties used by Json.NET in IL2CPP builds.
+
+### Added
+
+- Play mode lifecycle regressions and a 200-cycle Realtime reconnect fixture.
+- Guidance on client ownership, shutdown, and retrying canceled writes.
+
 ## [0.7.0] - 2026-11-05
 
 ### Fixed

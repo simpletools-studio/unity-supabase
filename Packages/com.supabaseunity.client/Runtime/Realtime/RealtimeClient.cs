@@ -48,6 +48,7 @@ namespace Supabase.Unity
             await connectionGate.WaitAsync(cancellationToken);
             try
             {
+                if (disposed) throw new OperationCanceledException();
                 if (IsConnected) return SupabaseResult.Success();
                 manualClose = false;
                 if (lifetime != null)
@@ -62,8 +63,13 @@ namespace Supabase.Unity
                 socket.MessageReceived += OnMessage;
                 socket.Closed += OnClosed;
                 socket.Error += OnError;
-                await socket.ConnectAsync(BuildSocketUri(), BuildHeaders(), cancellationToken);
-                StartHeartbeat(lifetime.Token);
+                var connectionToken = lifetime.Token;
+                using (var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, connectionToken))
+                {
+                    await socket.ConnectAsync(BuildSocketUri(), BuildHeaders(), linked.Token);
+                    linked.Token.ThrowIfCancellationRequested();
+                }
+                StartHeartbeat(connectionToken);
                 return SupabaseResult.Success();
             }
             catch (OperationCanceledException) { throw; }
@@ -303,9 +309,16 @@ namespace Supabase.Unity
                     return await completion.Task;
                 using (cancellationToken.Register(delegate { completion.TrySetCanceled(); }))
                 {
-                    var timer = SupabaseRuntimeHost.Delay(timeout, CancellationToken.None);
-                    var finished = await Task.WhenAny(completion.Task, timer);
-                    if (finished == completion.Task) return await completion.Task;
+                    using (var timerCancellation = new CancellationTokenSource())
+                    {
+                        try
+                        {
+                            var timer = SupabaseRuntimeHost.Delay(timeout, timerCancellation.Token);
+                            var finished = await Task.WhenAny(completion.Task, timer);
+                            if (finished == completion.Task) return await completion.Task;
+                        }
+                        finally { timerCancellation.Cancel(); }
+                    }
                 }
                 return SupabaseResult<JObject>.Failure(SupabaseError.Create(SupabaseService.Realtime,
                     SupabaseErrorKind.Timeout, "Realtime did not acknowledge the message before timeout.",
@@ -333,6 +346,9 @@ namespace Supabase.Unity
             await sendGate.WaitAsync(cancellationToken);
             try
             {
+                if (disposed || socket == null)
+                    return SupabaseResult.Failure(SupabaseError.Create(SupabaseService.Realtime,
+                        SupabaseErrorKind.Transport, "Realtime is closed."));
                 await socket.SendTextAsync(message.ToString(Newtonsoft.Json.Formatting.None), cancellationToken);
                 return SupabaseResult.Success();
             }
@@ -430,7 +446,7 @@ namespace Supabase.Unity
             foreach (var channel in snapshot) channel.NotifySocketClosed();
             var handler = Disconnected;
             if (handler != null) SupabaseRuntimeHost.Post(delegate { handler(code, reason); });
-            if (!manualClose && !disposed) ReconnectLoopAsync().Forget(OnError);
+            if (!manualClose && !disposed) ReconnectLoopAsync().Forget(ReportRecoveryError);
         }
 
         private void FailPendingPushes(SupabaseError error)
@@ -467,6 +483,7 @@ namespace Supabase.Unity
                 {
                     await SupabaseRuntimeHost.Delay(TimeSpan.FromSeconds(delays[Math.Min(attempt, delays.Length - 1)]),
                         CancellationToken.None);
+                    if (manualClose || disposed) return;
                     var result = await ConnectAsync(CancellationToken.None);
                     if (!result.IsSuccess) continue;
                     RealtimeChannel[] snapshot;
@@ -489,7 +506,7 @@ namespace Supabase.Unity
 
         private void StartHeartbeat(CancellationToken cancellationToken)
         {
-            HeartbeatLoopAsync(cancellationToken).Forget(OnError);
+            HeartbeatLoopAsync(cancellationToken).Forget(ReportRecoveryError);
         }
 
         private async Task HeartbeatLoopAsync(CancellationToken cancellationToken)
@@ -563,8 +580,8 @@ namespace Supabase.Unity
             foreach (var channel in snapshot) channel.NotifySocketClosed();
             if (socket != null) DetachAndDispose(socket);
             if (lifetime != null) lifetime.Dispose();
-            sendGate.Dispose();
-            connectionGate.Dispose();
+            // Pending async operations still release these semaphores as they unwind.
+            // Neither semaphore exposes a wait handle, so their state is collected with the client.
         }
 
         private void ThrowIfDisposed()

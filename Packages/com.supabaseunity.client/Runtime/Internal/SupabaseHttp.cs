@@ -11,7 +11,7 @@ namespace Supabase.Unity
 {
     internal static class SupabaseHttp
     {
-        internal const string ClientInfo = "supabase-unity/0.7.0";
+        internal const string ClientInfo = "supabase-unity/0.8.0";
         private static readonly Regex JwtPattern = new Regex(
             @"\beyJ[A-Za-z0-9_-]*\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\b",
             RegexOptions.CultureInvariant);

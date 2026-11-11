@@ -18,6 +18,26 @@ namespace Supabase.Unity.Tests
         }
 
         [Test]
+        public void Realtime_DisposingCancelsPendingConnection()
+        {
+            var socket = new RecordingWebSocketTransport
+            {
+                ConnectOverride = token => System.Threading.Tasks.Task.Delay(Timeout.Infinite, token)
+            };
+            var options = ConfigurationTests.ValidOptions();
+            options.HttpTransport = new RecordingHttpTransport();
+            options.WebSocketTransportFactory = () => socket;
+            using (var client = new SupabaseClient(options))
+            {
+                var connecting = client.Realtime.ConnectAsync();
+                Assert.IsFalse(connecting.IsCompleted);
+                client.Dispose();
+                Assert.IsTrue(connecting.IsCanceled, "The suspended connection must complete as canceled.");
+                Assert.IsFalse(client.Realtime.IsConnected);
+            }
+        }
+
+        [Test]
         public void NativeWebSocketConnect_PreCancelledTokenLeavesTransportClosed()
         {
             using (var socket = new NativeWebSocketTransport())

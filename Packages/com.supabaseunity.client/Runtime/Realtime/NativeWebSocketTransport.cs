@@ -41,6 +41,7 @@ namespace Supabase.Unity
             try
             {
                 await socket.ConnectAsync(uri, cancellationToken);
+                cancellationToken.ThrowIfCancellationRequested();
                 State = SupabaseWebSocketState.Open;
                 Raise(Opened);
                 ReceiveLoopAsync(lifetime.Token).Forget(RaiseError);

@@ -424,6 +424,7 @@ namespace Supabase.Unity.Tests
         internal readonly List<string> Sent = new List<string>();
         internal JObject JoinResponse = new JObject();
         internal bool AcknowledgeBroadcast;
+        internal Func<CancellationToken, Task> ConnectOverride;
         public SupabaseWebSocketState State { get; private set; } = SupabaseWebSocketState.Closed;
         public event Action Opened;
         public event Action<string> MessageReceived;
@@ -433,6 +434,7 @@ namespace Supabase.Unity.Tests
         public Task ConnectAsync(Uri uri, IReadOnlyDictionary<string, string> headers,
             CancellationToken cancellationToken = default(CancellationToken))
         {
+            if (ConnectOverride != null) return ConnectOverride(cancellationToken);
             ConnectedUri = uri;
             ConnectedHeaders = headers == null
                 ? new Dictionary<string, string>()

@@ -13,6 +13,11 @@ var ready = await client.InitializeAsync();
 
 `InitializeAsync` restores Auth state and, when enabled in settings, opens Realtime. Dispose the client when its owning game subsystem is destroyed.
 
+Disposing a runtime client cancels active requests on its default HTTP transport when Unity next
+polls them. For a request that writes data, cancellation can arrive after the server has applied
+the write. Check the server state before retrying. If you supply an HTTP transport, you own its
+lifetime.
+
 For Editor scripts outside Play mode, use the [Editor client factory](editor-scripting.md).
 
 `SupabaseClientOptions.RealtimeHeartbeatInterval` defaults to 25 seconds and must be greater
@@ -193,11 +198,15 @@ StartCoroutine(client.From<Profile>().GetAsync().AsCoroutine(
     exception => Debug.LogException(exception)));
 ```
 
-For IL2CPP builds, model members used only through reflection must be preserved. The Editor generator adds `[UnityEngine.Scripting.Preserve]` automatically; add it manually to handwritten models when using aggressive managed stripping.
+For IL2CPP builds, preserve model types and the members Json.NET reads or writes by reflection.
+Models generated with 0.8.0 include `[Preserve]` on the type and each property. Regenerate models
+from earlier versions or add the annotations to their properties. For handwritten models, annotate
+the type and serialized members or list them in your project's `link.xml`.
+See [Unity's preservation guidance](https://docs.unity3d.com/Manual/managed-code-stripping-preserving.html).
 
 ## API stability
 
-`0.7.0` preserves the runtime API published in `0.2.0`. A compatibility test records the
+`0.8.0` preserves the runtime API published in `0.2.0`. A compatibility test records the
 approved types, members, enum values, optional defaults, generic constraints, and declared
 interfaces. The Editor client factory lives in the separate Editor assembly and does not
 change the player API.

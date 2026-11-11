@@ -10,7 +10,7 @@ namespace Supabase.Unity
 {
     public sealed class UnityWebRequestTransport : IHttpTransport
     {
-        private bool disposed;
+        private volatile bool disposed;
 
         public Task<SupabaseHttpResponse> SendAsync(
             SupabaseHttpRequest request,
@@ -23,57 +23,65 @@ namespace Supabase.Unity
             if (request.Uri == null)
                 throw new ArgumentException("The HTTP request URI is required.", "request");
 
-            var completion = new TaskCompletionSource<SupabaseHttpResponse>();
-            SupabaseRuntimeHost.Run(SendRoutine(request, cancellationToken, completion));
+            var completion = new TaskCompletionSource<SupabaseHttpResponse>(TaskCreationOptions.RunContinuationsAsynchronously);
+            SupabaseRuntimeHost.Run(SendRoutine(request, cancellationToken, completion), () => completion.TrySetCanceled());
             return completion.Task;
         }
 
-        private static IEnumerator SendRoutine(
+        private IEnumerator SendRoutine(
             SupabaseHttpRequest request,
             CancellationToken cancellationToken,
             TaskCompletionSource<SupabaseHttpResponse> completion)
         {
             var routine = SendRoutineCore(request, cancellationToken, completion);
-            while (true)
+            try
             {
-                bool hasNext;
-                object current = null;
-                try
+                while (true)
                 {
-                    hasNext = routine.MoveNext();
-                    if (hasNext) current = routine.Current;
-                }
-                catch (Exception exception)
-                {
-                    var disposable = routine as IDisposable;
-                    if (disposable != null) disposable.Dispose();
-                    completion.TrySetResult(new SupabaseHttpResponse
+                    bool hasNext;
+                    object current = null;
+                    try
                     {
-                        StatusCode = 0,
-                        Body = new byte[0],
-                        Headers = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase),
-                        TransportError = SupabaseHttp.Redact(exception.Message)
-                    });
-                    yield break;
-                }
+                        hasNext = routine.MoveNext();
+                        if (hasNext) current = routine.Current;
+                    }
+                    catch (Exception exception)
+                    {
+                        completion.TrySetResult(new SupabaseHttpResponse
+                        {
+                            StatusCode = 0,
+                            Body = new byte[0],
+                            Headers = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase),
+                            TransportError = SupabaseHttp.Redact(exception.Message)
+                        });
+                        yield break;
+                    }
 
-                if (!hasNext)
-                    yield break;
-                yield return current;
+                    if (!hasNext)
+                        yield break;
+                    yield return current;
+                }
             }
+            finally { (routine as IDisposable)?.Dispose(); }
         }
 
-        private static IEnumerator SendRoutineCore(
+        private IEnumerator SendRoutineCore(
             SupabaseHttpRequest request,
             CancellationToken cancellationToken,
             TaskCompletionSource<SupabaseHttpResponse> completion)
         {
+            if (disposed || cancellationToken.IsCancellationRequested)
+            {
+                completion.TrySetCanceled();
+                yield break;
+            }
+
             using (var unityRequest = CreateRequest(request))
             {
                 var operation = unityRequest.SendWebRequest();
                 while (!operation.isDone)
                 {
-                    if (cancellationToken.IsCancellationRequested)
+                    if (disposed || cancellationToken.IsCancellationRequested)
                     {
                         unityRequest.Abort();
                         completion.TrySetCanceled();
@@ -87,7 +95,7 @@ namespace Supabase.Unity
                     yield return null;
                 }
 
-                if (cancellationToken.IsCancellationRequested)
+                if (disposed || cancellationToken.IsCancellationRequested)
                 {
                     completion.TrySetCanceled();
                     yield break;
@@ -99,7 +107,10 @@ namespace Supabase.Unity
                     request.UploadProgress.Report(1f);
                 if (request.DownloadProgress != null)
                     request.DownloadProgress.Report(1f);
-                completion.TrySetResult(response);
+                if (disposed || cancellationToken.IsCancellationRequested)
+                    completion.TrySetCanceled();
+                else
+                    completion.TrySetResult(response);
             }
         }
 
