@@ -1,6 +1,6 @@
 # Live acceptance testing
 
-The normal EditMode suite is credential-free and remains part of the release gate. The PlayMode suite checks Auth, PostgREST, Realtime, Storage, and an Edge Function against an isolated stack. It is required for the 0.7.0 compatibility review and is separate from the credential-free release gate.
+The normal EditMode suite is credential-free and remains part of the release gate. The PlayMode suite checks Auth, PostgREST, Realtime, Storage, and an Edge Function against an isolated stack. Run the PlayMode suite when a release changes service behavior or runtime connection handling.
 
 ## Local stack
 

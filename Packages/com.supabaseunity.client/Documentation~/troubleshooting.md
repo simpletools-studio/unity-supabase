@@ -79,9 +79,9 @@ See [platform notes](platforms.md) for platform-specific setup.
 
 ## IL2CPP returns objects with empty properties
 
-Models are populated through reflection. Use the Editor model generator, which adds
-`[UnityEngine.Scripting.Preserve]`, or add that attribute to handwritten models when managed
-stripping is aggressive.
+Regenerate models created before 0.8.0 to add `[Preserve]` to each property.
+For handwritten models, preserve the type and the members Json.NET uses by reflection.
+[Model preservation guide](api.md#model-preservation-in-il2cpp-builds)
 
 ## Unity freezes during a request
 

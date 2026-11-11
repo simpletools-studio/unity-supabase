@@ -475,7 +475,8 @@ namespace Supabase.Unity.Tests
             var generated = SupabaseModelGeneratorWindow.GenerateModel(
                 "scores", "ScoreRow", definition, "Game.Database");
 
-            StringAssert.Contains("[global::UnityEngine.Scripting.PreserveAttribute]", generated);
+            StringAssert.Contains("[global::UnityEngine.Scripting.PreserveAttribute]" + Environment.NewLine +
+                "        public long Id { get; set; }", generated);
             StringAssert.Contains("[global::Supabase.Unity.SupabaseTableAttribute(\"scores\")]", generated);
         }
 

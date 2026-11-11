@@ -73,3 +73,18 @@ differs from the locally tested artifact. A successful release contains:
 
 Do not recreate or move an existing version tag. Correct the problem, increment the prerelease
 or patch version, rerun the gate, and publish a new tag.
+
+
+## Windows IL2CPP model probe
+
+Run the model probe with an activated Unity 6 Editor, Windows IL2CPP support, and a Windows C++
+toolchain. Supply a new output directory. The script generates a model from fixture schema,
+builds a Windows x64 player with Medium stripping, and verifies typed Database and RPC
+responses against an ephemeral loopback server.
+
+```powershell
+python .github/scripts/verify_il2cpp.py --unity "<Unity.exe path>" --output .utmp/il2cpp-model-check
+```
+
+The generated source, build logs, and player output stay in the probe directory. Keep that
+directory outside the shipped package.

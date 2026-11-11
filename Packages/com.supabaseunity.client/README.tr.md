@@ -2,15 +2,14 @@
 
 Bu paket Unity 2021.3 LTS ile Unity 6 arasında aynı API ile Auth, Database, Realtime, Storage ve Edge Functions kullanmak için Unity’ye özgü bir istemci sağlar. WebGL’de tarayıcı WebSocket köprüsünü kullanır; diğer platformlarda native WebSocket kullanır. Oturum kalıcılığı varsayılan olarak kapalıdır. Açıldığında oturumlar WebGL’de `localStorage`, diğer platformlarda `persistentDataPath` altında saklanır.
 
-> `0.7.0`, Database arama ve dizi filtrelerini ve Storage listeleme seçeneklerini düzeltir.
-> Yerel servis testleri ve sınırlar için [servis uyumluluğu](Documentation~/service-compatibility.md) rehberine bakın.
+> `0.8.0`, kapanışta bekleyen işlemleri iptal eder, elle kapatılan Realtime bağlantısının yeniden açılmasını önler ve üretilen model özelliklerini IL2CPP derlemelerinde korur. Eski modelleri yeniden üret veya özelliklerine koruma özniteliklerini ekle. [Model koruma rehberi](Documentation~/api.md#model-preservation-in-il2cpp-builds)
 
 ## Hızlı başlangıç
 
 Package Manager’da **Add package from git URL** seçeneğine şunu gir:
 
 ```text
-https://github.com/DorukTan/unity-supabase.git?path=/Packages/com.supabaseunity.client#v0.7.0
+https://github.com/DorukTan/unity-supabase.git?path=/Packages/com.supabaseunity.client#v0.8.0
 ```
 
 Ardından **Tools > Supabase > Setup** ekranını açıp ayar dosyasını oluştur. Supabase Dashboard’daki **Connect** ekranından proje URL’sini ve `sb_publishable_...` anahtarını al, sonra **Test Project Connection** düğmesine bas. Bu test bağlantıyı ve anahtarı kontrol eder; RLS kurallarını değiştirmez. Eski `anon` JWT anahtarları da desteklenir.
@@ -20,48 +19,9 @@ yenileme, Realtime başlangıcı ve istek zaman aşımı ayarları, Setup ve Ins
 **Runtime options** bölümündedir. Oturum kalıcılığı açıksa, bu bölüm kapalıyken de depolama
 uyarısı görünür. Ayarları değiştirmek önceki bağlantı sonucunu temizler.
 
-```csharp
-using Supabase.Unity;
-using UnityEngine;
-
-public sealed class GameBootstrap : MonoBehaviour
-{
-    [SerializeField] private SupabaseSettings settings;
-    private SupabaseClient client;
-
-    private async void Start()
-    {
-        client = new SupabaseClient(settings);
-        var initialized = await client.InitializeAsync();
-        if (!initialized.IsSuccess)
-        {
-            Debug.LogError(initialized.Error);
-            return;
-        }
-
-        var result = await client.From<PlayerProfile>("profiles")
-            .Select("id,username,score")
-            .Order("score", ascending: false)
-            .Limit(20)
-            .GetAsync();
-
-        if (result.IsSuccess)
-            foreach (var profile in result.Data) Debug.Log(profile.Username);
-    }
-
-    private void OnDestroy()
-    {
-        if (client != null) client.Dispose();
-    }
-}
-
-public sealed class PlayerProfile
-{
-    [SupabaseColumn("id")] public string Id { get; set; }
-    [SupabaseColumn("username")] public string Username { get; set; }
-    [SupabaseColumn("score")] public int Score { get; set; }
-}
-```
+Hazır liderlik tablosunu çalıştırmak için aşağıdaki Quickstart adımlarını izle.
+Kendi bileşenini yazmak için [Leaderboard örneğine](README.md#example) bakabilirsin.
+Giriş ve Realtime örnekleri, oluşturduğun `client` nesnesini kullanır.
 
 Giriş örneği:
 

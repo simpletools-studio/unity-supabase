@@ -5,6 +5,8 @@
 - [Troubleshooting](troubleshooting.md)
 - [API guide](api.md)
 - [Editor scripting](editor-scripting.md)
+- [Runtime lifecycle](runtime-lifecycle.md)
+- [Service compatibility](service-compatibility.md)
 - [Platform notes](platforms.md)
 - [Session storage](session-storage.md)
 - [Security model](security.md)

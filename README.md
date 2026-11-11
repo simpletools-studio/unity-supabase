@@ -8,17 +8,18 @@ An independent Supabase client for Unity 2021.3 and newer, with Auth, Database, 
 Storage, and Edge Functions APIs for WebGL, desktop, and mobile projects.
 
 <p align="center">
-  <a href="https://github.com/simpletools-studio/unity-supabase/releases/tag/v0.7.0"><img alt="Release" src="https://img.shields.io/badge/release-0.7.0-3ecf8e" /></a>
-  <a href="https://github.com/simpletools-studio/unity-supabase/releases/download/v0.7.0/com.supabaseunity.client-0.7.0.unitypackage"><img alt="Download unitypackage" src="https://img.shields.io/badge/download-.unitypackage-3ecf8e?logo=unity&amp;logoColor=white" /></a>
+  <a href="https://github.com/simpletools-studio/unity-supabase/releases/tag/v0.8.0"><img alt="Release" src="https://img.shields.io/badge/release-0.8.0-3ecf8e" /></a>
+  <a href="https://github.com/simpletools-studio/unity-supabase/releases/download/v0.8.0/com.supabaseunity.client-0.8.0.unitypackage"><img alt="Download unitypackage" src="https://img.shields.io/badge/download-.unitypackage-3ecf8e?logo=unity&amp;logoColor=white" /></a>
   <a href="https://github.com/simpletools-studio/unity-supabase/actions/workflows/package-checks.yml"><img alt="Package checks" src="https://github.com/simpletools-studio/unity-supabase/actions/workflows/package-checks.yml/badge.svg" /></a>
   <img alt="Unity" src="https://img.shields.io/badge/Unity-2021.3%20to%206-222222?logo=unity" />
   <a href="LICENSE.md"><img alt="License" src="https://img.shields.io/badge/license-MIT-blue" /></a>
 </p>
 
-Version **0.7.0** fixes configured full-text searches, PostgreSQL array filters, and
-Storage listing options. Its isolated service checks cover all five services and two-user access policies.
-See the [service compatibility guide](Packages/com.supabaseunity.client/Documentation~/service-compatibility.md) for the tested operations and remaining limits.
-The 0.2.0 runtime API and [Editor scripting](Packages/com.supabaseunity.client/Documentation~/editor-scripting.md) remain available.
+Version **0.8.0** cancels pending work during shutdown, keeps Realtime closed after a manual
+disconnect, and preserves generated model properties under IL2CPP stripping.
+
+If you use IL2CPP, regenerate models created with earlier versions or add preservation
+annotations to their properties. [Model preservation guide](Packages/com.supabaseunity.client/Documentation~/api.md#model-preservation-in-il2cpp-builds)
 
 ## Installation
 
@@ -26,11 +27,11 @@ In Unity 2021.3 or 2022.3, open **Window > Package Manager**. In Unity 6, open
 **Window > Package Management > Package Manager**. Select **Add package from git URL**:
 
 ```text
-https://github.com/DorukTan/unity-supabase.git?path=/Packages/com.supabaseunity.client#v0.7.0
+https://github.com/DorukTan/unity-supabase.git?path=/Packages/com.supabaseunity.client#v0.8.0
 ```
 
 UPM installs the Newtonsoft Json.NET dependency automatically. The
-[release page](https://github.com/simpletools-studio/unity-supabase/releases/tag/v0.7.0) also provides:
+[release page](https://github.com/simpletools-studio/unity-supabase/releases/tag/v0.8.0) also provides:
 
 - A `.tgz` for **Package Manager > Add package from tarball**.
 - A `.unitypackage` for **Assets > Import Package > Custom Package**. Install
@@ -63,6 +64,7 @@ using System;
 using System.Threading;
 using Supabase.Unity;
 using UnityEngine;
+using UnityEngine.Scripting;
 
 public sealed class Leaderboard : MonoBehaviour
 {
@@ -120,12 +122,12 @@ public sealed class Leaderboard : MonoBehaviour
     }
 }
 
-[Serializable, SupabaseTable("scores")]
+[Serializable, Preserve, SupabaseTable("scores")]
 public sealed class ScoreRow
 {
-    [SupabaseColumn("id")] public long Id { get; set; }
-    [SupabaseColumn("player_name")] public string PlayerName { get; set; }
-    [SupabaseColumn("score")] public int Score { get; set; }
+    [Preserve, SupabaseColumn("id")] public long Id { get; set; }
+    [Preserve, SupabaseColumn("player_name")] public string PlayerName { get; set; }
+    [Preserve, SupabaseColumn("score")] public int Score { get; set; }
 }
 ```
 
@@ -162,28 +164,23 @@ error. Files for removed tables stay in the output folder for manual review.
 
 ## Verification and platform boundaries
 
-The local verification for 0.7.0 covers the following boundaries. A successful build
-does not establish live service behavior on a device.
+All three listed Editors passed 193 EditMode tests each. The isolated Supabase stack passed
+three PlayMode scenarios covering the five services and two-user access policies.
 
 | Target | Recorded verification |
 | --- | --- |
 | Unity 2021.3.45f2 Editor | EditMode suite and documentation example compilation |
 | Unity 2022.3.62f2 Editor | EditMode suite and documentation example compilation |
 | Unity 6000.6.7f1 Editor | EditMode suite and clean `.unitypackage` import/compilation |
-| WebGL | Smoke player build from the clean package import |
-| Windows | Smoke player build from the clean package import |
+| WebGL | Smoke build and startup in Chromium |
+| Windows x64 | Smoke build and separate IL2CPP model deserialization check with Medium stripping |
 | Android | Smoke player build from the clean package import |
-| iOS | Unity Xcode project export; Xcode compilation, signing, and hardware execution remain separate |
+| iOS | Unity Xcode project export |
 | Linux x64 | Mono smoke player cross-built on Windows from the clean package import |
 | macOS players | No recorded player check |
 | Consoles | Unsupported |
 
-For 0.6.0, separate loopback checks exercised WebSocket echo, remote close, connection cancellation,
-and file storage in headless Windows and Linux x64 Mono players. The Linux run used Ubuntu
-on WSL2. The WebGL smoke player loaded in Chromium. A separate browser fixture exercised
-callback URL cleanup, browser storage, and the WebSocket bridge. An EditMode test simulated focus return and verified session refresh.
-These results cover the listed behaviors with fixtures. Android and iOS device behavior
-and live Supabase service behavior require separate checks.
+See the platform notes for the test environment, earlier runtime checks, and device coverage.
 
 The package uses `UnityWebRequest` for HTTP, browser WebSockets on WebGL, and native
 WebSockets elsewhere. See [platform notes](Packages/com.supabaseunity.client/Documentation~/platforms.md)
@@ -201,7 +198,7 @@ with the package/Unity version, OS or device, exercised services, and sanitized 
 ## Security and session storage
 
 Elevated client keys are rejected, credentialed requests do not follow redirects, and
-SDK errors redact keys and tokens. These safeguards do not replace your application's
+SDK errors redact recognized credential patterns. These safeguards do not replace your application's
 database grants, RLS, Storage policies, or Edge Function authorization.
 
 Session persistence is off by default. Read the
@@ -218,6 +215,8 @@ Do not include credentials in issues or logs.
 - [API guide](Packages/com.supabaseunity.client/Documentation~/api.md)
 - [Editor scripting](Packages/com.supabaseunity.client/Documentation~/editor-scripting.md)
 - [Troubleshooting](Packages/com.supabaseunity.client/Documentation~/troubleshooting.md)
+- [Runtime lifecycle](Packages/com.supabaseunity.client/Documentation~/runtime-lifecycle.md)
+- [Service compatibility](Packages/com.supabaseunity.client/Documentation~/service-compatibility.md)
 - [Platform notes](Packages/com.supabaseunity.client/Documentation~/platforms.md)
 - [Session storage](Packages/com.supabaseunity.client/Documentation~/session-storage.md)
 - [Security model](Packages/com.supabaseunity.client/Documentation~/security.md)

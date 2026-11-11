@@ -22,7 +22,7 @@ body:
     attributes:
       label: Package version
       description: From package.json, or the git tag you installed.
-      placeholder: 0.3.0
+      placeholder: 0.8.0
     validations:
       required: true
 
@@ -31,7 +31,7 @@ body:
     attributes:
       label: Unity version
       description: Exactly as shown in ProjectSettings/ProjectVersion.txt.
-      placeholder: 6000.4.8f1
+      placeholder: 6000.6.7f1
     validations:
       required: true
 

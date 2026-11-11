@@ -28,13 +28,13 @@
 | Runtime check | A named behavior ran in a browser, player, or on a device. The result applies to that environment and behavior. |
 | Live service check | A named operation ran against a real Supabase project. |
 
-## Results for 0.7.0
+## Results for 0.8.0
 
 | Target | Recorded check | Further coverage |
 | --- | --- | --- |
 | Unity Editor on Windows | EditMode tests on 2021.3.45f2, 2022.3.62f2, and 6000.6.7f1. Clean archive import on 6000.6.7f1. | Editor tests on Linux and macOS. |
-| WebGL | Smoke player build. | Browser integration and live service coverage vary by behavior. |
-| Windows x64 | Smoke player build. | Live service and long-running player checks. |
+| WebGL | Smoke player build and startup in Chromium 151.0.7922.34. | Browser service operations, authentication callbacks, and persistence. |
+| Windows x64 | Smoke player build. An IL2CPP player on Unity 6000.6.7f1 deserialized generated and handwritten models with Medium managed stripping. | Long-running native network and hosted-project checks. |
 | Linux x64 | Mono smoke player cross-built from the clean archive on Windows. | Linux Editor, desktop player, and live service coverage. |
 | macOS | No recorded player check. | Player build and execution. |
 | Android | Smoke APK build. | Device testing, including background and resume. |

@@ -597,6 +597,7 @@ namespace Supabase.Unity.Editor
                 var type = CsType(schema, required.Contains(property.Name), table + "." + property.Name);
                 builder.AppendLine("        [global::Newtonsoft.Json.JsonPropertyAttribute(\"" + Escape(property.Name) + "\")]");
                 builder.AppendLine("        [global::Supabase.Unity.SupabaseColumnAttribute(\"" + Escape(property.Name) + "\")]");
+                builder.AppendLine("        [global::UnityEngine.Scripting.PreserveAttribute]");
                 builder.AppendLine("        public " + type + " " + propertyName + " { get; set; }");
                 builder.AppendLine();
             }

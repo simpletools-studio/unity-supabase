@@ -12,6 +12,7 @@ namespace Supabase.Unity
     {
         private static readonly object Gate = new object();
         private static readonly Queue<Action> Pending = new Queue<Action>();
+        private static readonly Dictionary<IEnumerator, Action> Scheduled = new Dictionary<IEnumerator, Action>();
         private static SupabaseRuntimeHost instance;
         private static int mainThreadId;
 
@@ -26,7 +27,7 @@ namespace Supabase.Unity
         internal static void ResetState()
         {
             mainThreadId = Thread.CurrentThread.ManagedThreadId;
-            lock (Gate) Pending.Clear();
+            CancelScheduledWork();
             FocusChanged = null;
             WebSocketOpened = null;
             WebSocketMessage = null;
@@ -74,17 +75,70 @@ namespace Supabase.Unity
                 Pending.Enqueue(action);
         }
 
-        internal static void Run(IEnumerator routine)
+        internal static void Run(IEnumerator routine, Action onStopped)
         {
-            if (routine == null)
-                throw new ArgumentNullException("routine");
-            Post(delegate { instance.StartCoroutine(routine); });
+            lock (Gate) Scheduled.Add(routine, onStopped);
+            try
+            {
+                Post(delegate
+                {
+                    lock (Gate)
+                        if (!Scheduled.ContainsKey(routine)) return;
+                    instance.StartCoroutine(TrackRoutine(routine));
+                });
+            }
+            catch
+            {
+                FinishRoutine(routine);
+                throw;
+            }
+        }
+
+        private static IEnumerator TrackRoutine(IEnumerator routine)
+        {
+            try
+            {
+                while (routine.MoveNext())
+                    yield return routine.Current;
+            }
+            finally { FinishRoutine(routine); }
+        }
+
+        private static void FinishRoutine(IEnumerator routine)
+        {
+            Action stopped;
+            lock (Gate)
+            {
+                if (!Scheduled.TryGetValue(routine, out stopped)) return;
+                Scheduled.Remove(routine);
+            }
+            DisposeRoutine(routine, stopped);
+        }
+
+        private static void CancelScheduledWork()
+        {
+            KeyValuePair<IEnumerator, Action>[] snapshot;
+            lock (Gate)
+            {
+                snapshot = new KeyValuePair<IEnumerator, Action>[Scheduled.Count];
+                ((ICollection<KeyValuePair<IEnumerator, Action>>)Scheduled).CopyTo(snapshot, 0);
+                Scheduled.Clear();
+                Pending.Clear();
+            }
+            foreach (var item in snapshot)
+                DisposeRoutine(item.Key, item.Value);
+        }
+
+        private static void DisposeRoutine(IEnumerator routine, Action stopped)
+        {
+            try { (routine as IDisposable)?.Dispose(); }
+            finally { stopped(); }
         }
 
         internal static Task Delay(TimeSpan delay, CancellationToken cancellationToken)
         {
-            var completion = new TaskCompletionSource<bool>();
-            Run(DelayRoutine(delay, cancellationToken, completion));
+            var completion = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            Run(DelayRoutine(delay, cancellationToken, completion), () => completion.TrySetCanceled());
             return completion.Task;
         }
 
@@ -190,10 +244,19 @@ namespace Supabase.Unity
             }
         }
 
+        private void OnApplicationQuit()
+        {
+            if (instance != this) return;
+            StopAllCoroutines();
+            CancelScheduledWork();
+        }
+
         private void OnDestroy()
         {
-            if (instance == this)
-                instance = null;
+            if (instance != this) return;
+            instance = null;
+            StopAllCoroutines();
+            CancelScheduledWork();
         }
     }
 }
