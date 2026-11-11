@@ -1,6 +1,7 @@
 # Supabase for Unity documentation
 
 - [Getting started](getting-started.md)
+- [Install and upgrade](install-and-upgrade.md)
 - [Quickstart sample](../Samples~/Quickstart/README.md)
 - [Troubleshooting](troubleshooting.md)
 - [API guide](api.md)

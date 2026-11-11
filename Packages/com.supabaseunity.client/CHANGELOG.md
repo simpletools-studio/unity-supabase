@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.9.0] - 2026-11-11
+
+### Fixed
+
+- Preserve Quickstart leaderboard properties under IL2CPP stripping.
+- Show score query failures with setup guidance before attempting a Realtime subscription.
+
+### Added
+
+- Installation and upgrade instructions for Git, tarball, and unitypackage projects.
+
 ## [0.8.0] - 2026-11-11
 
 ### Fixed

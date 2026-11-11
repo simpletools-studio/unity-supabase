@@ -208,7 +208,7 @@ See [Unity's preservation guidance](https://docs.unity3d.com/Manual/managed-code
 
 ## API stability
 
-`0.8.0` preserves the runtime API published in `0.2.0`. A compatibility test records the
+`0.9.0` preserves the runtime API published in `0.2.0`. A compatibility test records the
 approved types, members, enum values, optional defaults, generic constraints, and declared
 interfaces. The Editor client factory lives in the separate Editor assembly and does not
 change the player API.

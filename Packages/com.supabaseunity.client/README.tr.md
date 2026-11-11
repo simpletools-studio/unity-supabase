@@ -2,14 +2,14 @@
 
 Bu paket Unity 2021.3 LTS ile Unity 6 arasında aynı API ile Auth, Database, Realtime, Storage ve Edge Functions kullanmak için Unity’ye özgü bir istemci sağlar. WebGL’de tarayıcı WebSocket köprüsünü kullanır; diğer platformlarda native WebSocket kullanır. Oturum kalıcılığı varsayılan olarak kapalıdır. Açıldığında oturumlar WebGL’de `localStorage`, diğer platformlarda `persistentDataPath` altında saklanır.
 
-> `0.8.0`, kapanışta bekleyen işlemleri iptal eder, elle kapatılan Realtime bağlantısının yeniden açılmasını önler ve üretilen model özelliklerini IL2CPP derlemelerinde korur. Eski modelleri yeniden üret veya özelliklerine koruma özniteliklerini ekle. [Model koruma rehberi](Documentation~/api.md#model-preservation-in-il2cpp-builds)
+> `0.9.0`, Quickstart kurulumunu iyileştirir ve mevcut Unity projeleri için yükseltme adımlarını açıklar. [Kurulum ve yükseltme rehberi](Documentation~/install-and-upgrade.md#turkce-kurulum-ve-yukseltme)
 
 ## Hızlı başlangıç
 
 Package Manager’da **Add package from git URL** seçeneğine şunu gir:
 
 ```text
-https://github.com/DorukTan/unity-supabase.git?path=/Packages/com.supabaseunity.client#v0.8.0
+https://github.com/DorukTan/unity-supabase.git?path=/Packages/com.supabaseunity.client#v0.9.0
 ```
 
 Ardından **Tools > Supabase > Setup** ekranını açıp ayar dosyasını oluştur. Supabase Dashboard’daki **Connect** ekranından proje URL’sini ve `sb_publishable_...` anahtarını al, sonra **Test Project Connection** düğmesine bas. Bu test bağlantıyı ve anahtarı kontrol eder; RLS kurallarını değiştirmez. Eski `anon` JWT anahtarları da desteklenir.

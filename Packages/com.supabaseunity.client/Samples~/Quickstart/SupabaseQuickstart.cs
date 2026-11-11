@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using Supabase.Unity;
 using UnityEngine;
+using UnityEngine.Scripting;
 
 namespace Supabase.Unity.Samples
 {
@@ -58,19 +59,19 @@ namespace Supabase.Unity.Samples
                     .Limit(20)
                     .GetAsync(token);
                 token.ThrowIfCancellationRequested();
-                if (result.IsSuccess)
-                {
-                    status = "Loaded " + result.Data.Count + " scores.";
-                    foreach (var score in result.Data)
-                        status += "\n" + score.PlayerName + ": " + score.Score;
-                    Debug.Log("Supabase Quickstart: loaded " + result.Data.Count + " score rows.", this);
-                    foreach (var score in result.Data)
-                        Debug.Log(score.PlayerName + ": " + score.Score, this);
-                }
-                else
+                if (!result.IsSuccess)
                 {
                     LogFailure("load scores", result.Error);
+                    status += "\nRun setup.sql in the configured project and check the read policy for public.scores.";
+                    return;
                 }
+
+                status = "Loaded " + result.Data.Count + " scores.";
+                foreach (var score in result.Data)
+                    status += "\n" + score.PlayerName + ": " + score.Score;
+                Debug.Log("Supabase Quickstart: loaded " + result.Data.Count + " score rows.", this);
+                foreach (var score in result.Data)
+                    Debug.Log(score.PlayerName + ": " + score.Score, this);
 
                 token.ThrowIfCancellationRequested();
                 var channel = current.Realtime.Channel("quickstart-scores");
@@ -120,11 +121,11 @@ namespace Supabase.Unity.Samples
         }
     }
 
-    [Serializable, SupabaseTable("scores")]
+    [Serializable, Preserve, SupabaseTable("scores")]
     public sealed class ScoreRow
     {
-        [SupabaseColumn("id")] public long Id { get; set; }
-        [SupabaseColumn("player_name")] public string PlayerName { get; set; }
-        [SupabaseColumn("score")] public int Score { get; set; }
+        [Preserve, SupabaseColumn("id")] public long Id { get; set; }
+        [Preserve, SupabaseColumn("player_name")] public string PlayerName { get; set; }
+        [Preserve, SupabaseColumn("score")] public int Score { get; set; }
     }
 }

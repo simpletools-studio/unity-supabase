@@ -8,18 +8,15 @@ An independent Supabase client for Unity 2021.3 and newer, with Auth, Database, 
 Storage, and Edge Functions APIs for WebGL, desktop, and mobile projects.
 
 <p align="center">
-  <a href="https://github.com/simpletools-studio/unity-supabase/releases/tag/v0.8.0"><img alt="Release" src="https://img.shields.io/badge/release-0.8.0-3ecf8e" /></a>
-  <a href="https://github.com/simpletools-studio/unity-supabase/releases/download/v0.8.0/com.supabaseunity.client-0.8.0.unitypackage"><img alt="Download unitypackage" src="https://img.shields.io/badge/download-.unitypackage-3ecf8e?logo=unity&amp;logoColor=white" /></a>
+  <a href="https://github.com/simpletools-studio/unity-supabase/releases/tag/v0.9.0"><img alt="Release" src="https://img.shields.io/badge/release-0.9.0-3ecf8e" /></a>
+  <a href="https://github.com/simpletools-studio/unity-supabase/releases/download/v0.9.0/com.supabaseunity.client-0.9.0.unitypackage"><img alt="Download unitypackage" src="https://img.shields.io/badge/download-.unitypackage-3ecf8e?logo=unity&amp;logoColor=white" /></a>
   <a href="https://github.com/simpletools-studio/unity-supabase/actions/workflows/package-checks.yml"><img alt="Package checks" src="https://github.com/simpletools-studio/unity-supabase/actions/workflows/package-checks.yml/badge.svg" /></a>
   <img alt="Unity" src="https://img.shields.io/badge/Unity-2021.3%20to%206-222222?logo=unity" />
   <a href="LICENSE.md"><img alt="License" src="https://img.shields.io/badge/license-MIT-blue" /></a>
 </p>
 
-Version **0.8.0** cancels pending work during shutdown, keeps Realtime closed after a manual
-disconnect, and preserves generated model properties under IL2CPP stripping.
-
-If you use IL2CPP, regenerate models created with earlier versions or add preservation
-annotations to their properties. [Model preservation guide](Packages/com.supabaseunity.client/Documentation~/api.md#model-preservation-in-il2cpp-builds)
+Version **0.9.0** improves Quickstart setup and adds instructions for upgrading existing Unity projects.
+[Install and upgrade guide](Packages/com.supabaseunity.client/Documentation~/install-and-upgrade.md)
 
 ## Installation
 
@@ -27,11 +24,11 @@ In Unity 2021.3 or 2022.3, open **Window > Package Manager**. In Unity 6, open
 **Window > Package Management > Package Manager**. Select **Add package from git URL**:
 
 ```text
-https://github.com/DorukTan/unity-supabase.git?path=/Packages/com.supabaseunity.client#v0.8.0
+https://github.com/DorukTan/unity-supabase.git?path=/Packages/com.supabaseunity.client#v0.9.0
 ```
 
 UPM installs the Newtonsoft Json.NET dependency automatically. The
-[release page](https://github.com/simpletools-studio/unity-supabase/releases/tag/v0.8.0) also provides:
+[release page](https://github.com/simpletools-studio/unity-supabase/releases/tag/v0.9.0) also provides:
 
 - A `.tgz` for **Package Manager > Add package from tarball**.
 - A `.unitypackage` for **Assets > Import Package > Custom Package**. Install
@@ -212,6 +209,7 @@ Do not include credentials in issues or logs.
 ## Documentation
 
 - [Getting started](Packages/com.supabaseunity.client/Documentation~/getting-started.md)
+- [Install and upgrade](Packages/com.supabaseunity.client/Documentation~/install-and-upgrade.md)
 - [API guide](Packages/com.supabaseunity.client/Documentation~/api.md)
 - [Editor scripting](Packages/com.supabaseunity.client/Documentation~/editor-scripting.md)
 - [Troubleshooting](Packages/com.supabaseunity.client/Documentation~/troubleshooting.md)
