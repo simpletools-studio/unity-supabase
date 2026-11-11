@@ -3,7 +3,7 @@
 An independent Supabase client for Unity 2021.3 and newer. The package provides Auth,
 Database, Realtime, Storage and Edge Functions APIs for WebGL, desktop and mobile projects.
 
-> `0.8.0` cancels pending work during shutdown, keeps Realtime closed after a manual disconnect, and preserves generated model properties in IL2CPP builds. Regenerate older models or add preservation annotations to their properties. [Model preservation guide](Documentation~/api.md#model-preservation-in-il2cpp-builds)
+> `0.9.0` improves Quickstart setup and documents how to upgrade an existing Unity project. [Install and upgrade guide](Documentation~/install-and-upgrade.md)
 
 ## Installation
 
@@ -11,7 +11,7 @@ In Unity 2021.3 or 2022.3, open **Window > Package Manager**. In Unity 6, open
 **Window > Package Management > Package Manager**. Select **Add package from git URL**, then enter:
 
 ```text
-https://github.com/DorukTan/unity-supabase.git?path=/Packages/com.supabaseunity.client#v0.8.0
+https://github.com/DorukTan/unity-supabase.git?path=/Packages/com.supabaseunity.client#v0.9.0
 ```
 
 Release tarballs and `.unitypackage` files are available on the
@@ -147,6 +147,7 @@ thread. Use `await` or the provided coroutine bridge.
 ## Documentation
 
 - [Getting started](Documentation~/getting-started.md)
+- [Install and upgrade](Documentation~/install-and-upgrade.md)
 - [Quickstart sample](Samples~/Quickstart/README.md)
 - [Troubleshooting](Documentation~/troubleshooting.md)
 - [API guide](Documentation~/api.md)
