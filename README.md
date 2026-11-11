@@ -161,8 +161,9 @@ error. Files for removed tables stay in the output folder for manual review.
 
 ## Verification and platform boundaries
 
-All three listed Editors passed 193 EditMode tests each. The isolated Supabase stack passed
-three PlayMode scenarios covering the five services and two-user access policies.
+All three listed Editors passed 193 EditMode tests each for 0.9.0. The imported Quickstart
+loaded seed data and received a Realtime update using a publishable key on an isolated
+Supabase stack. The five-service and two-user access checks were run for 0.8.0.
 
 | Target | Recorded verification |
 | --- | --- |
@@ -170,7 +171,7 @@ three PlayMode scenarios covering the five services and two-user access policies
 | Unity 2022.3.62f2 Editor | EditMode suite and documentation example compilation |
 | Unity 6000.6.7f1 Editor | EditMode suite and clean `.unitypackage` import/compilation |
 | WebGL | Smoke build and startup in Chromium |
-| Windows x64 | Smoke build and separate IL2CPP model deserialization check with Medium stripping |
+| Windows x64 | Smoke build. IL2CPP model deserialization with Medium stripping was verified for 0.8.0. |
 | Android | Smoke player build from the clean package import |
 | iOS | Unity Xcode project export |
 | Linux x64 | Mono smoke player cross-built on Windows from the clean package import |
