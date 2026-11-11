@@ -15,8 +15,7 @@ Connection**. This checks the client configuration and network path without send
 key. It does not test a table or its policies.
 
 The selected settings asset path is shown below the selector. **Runtime options** contains
-session persistence, automatic refresh, Realtime startup and the HTTP timeout. These options
-keep their existing defaults. Enabling persistence shows the storage warning even when the
+session persistence, automatic refresh, Realtime startup and the HTTP timeout. Enabling persistence shows the storage warning even when the
 foldout is closed. Changing settings clears previous connection feedback.
 
 Call `InitializeAsync` once near game startup. When persistence is explicitly enabled, this restores an existing session and refreshes it when needed. It can also optionally connect Realtime.
@@ -30,8 +29,7 @@ your settings asset and press Play. The scene displays setup instructions and le
 the sample queries `public.scores` and subscribes to its Postgres Changes.
 
 Opening the scene uses Unity's normal save prompt for modified scenes. Cancel leaves the current
-scene open. Exit Play mode before opening another scene. The assistant does not run SQL, assign
-settings to the scene, or contact Supabase just because a scene was opened.
+scene open. Exit Play mode before opening another scene. Run the SQL and assign your settings before entering Play mode.
 
 If several sample copies exist, Setup shows the selected path and consistently uses the first
 script path in ordinal order. To use another copy, open that scene directly in the Project window.
@@ -86,7 +84,9 @@ Subscribe to `client.Auth.StateChanged` to update UI. Realtime channel tokens ca
 
 Use `client.Storage.From("avatars")` for object operations. Upload and download options accept `IProgress<float>`. Download also accepts a chunk callback for streaming consumption.
 
-Edge Functions always receive the configured key in `apikey`. `Authorization` is added only when an authenticated user JWT exists; a new `sb_publishable_...` key is never sent as a bearer token. Public functions must use the appropriate `verify_jwt` setting and implement their intended authorization policy. See Supabase's [authorization header guide](https://supabase.com/docs/guides/functions/auth-headers).
+Edge Functions receive the configured key in `apikey`. The SDK uses the current session JWT
+as the bearer token when signed in. Without a session, a legacy `anon` JWT is sent as the
+bearer token. A new `sb_publishable_...` key is sent only in `apikey`. Public functions must use the appropriate `verify_jwt` setting and implement their intended authorization policy. See Supabase's [authorization header guide](https://supabase.com/docs/guides/functions/auth-headers).
 
 If something fails, use the [troubleshooting guide](troubleshooting.md) before changing keys or
 loosening a policy.

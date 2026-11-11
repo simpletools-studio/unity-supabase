@@ -198,6 +198,8 @@ StartCoroutine(client.From<Profile>().GetAsync().AsCoroutine(
     exception => Debug.LogException(exception)));
 ```
 
+## Model preservation in IL2CPP builds
+
 For IL2CPP builds, preserve model types and the members Json.NET reads or writes by reflection.
 Models generated with 0.8.0 include `[Preserve]` on the type and each property. Regenerate models
 from earlier versions or add the annotations to their properties. For handwritten models, annotate

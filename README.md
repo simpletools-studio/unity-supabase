@@ -15,8 +15,11 @@ Storage, and Edge Functions APIs for WebGL, desktop, and mobile projects.
   <a href="LICENSE.md"><img alt="License" src="https://img.shields.io/badge/license-MIT-blue" /></a>
 </p>
 
-Version **0.8.0** cancels pending runtime work during shutdown and prevents Realtime from reconnecting after a manual disconnect. The [runtime lifecycle guide](Packages/com.supabaseunity.client/Documentation~/runtime-lifecycle.md) explains client ownership, cancellation, and retry behavior.
-The 0.2.0 runtime API and [Editor scripting](Packages/com.supabaseunity.client/Documentation~/editor-scripting.md) remain available.
+Version **0.8.0** cancels pending work during shutdown, keeps Realtime closed after a manual
+disconnect, and preserves generated model properties under IL2CPP stripping.
+
+If you use IL2CPP, regenerate models created with earlier versions or add preservation
+annotations to their properties. [Model preservation guide](Packages/com.supabaseunity.client/Documentation~/api.md#model-preservation-in-il2cpp-builds)
 
 ## Installation
 
@@ -61,6 +64,7 @@ using System;
 using System.Threading;
 using Supabase.Unity;
 using UnityEngine;
+using UnityEngine.Scripting;
 
 public sealed class Leaderboard : MonoBehaviour
 {
@@ -118,12 +122,12 @@ public sealed class Leaderboard : MonoBehaviour
     }
 }
 
-[Serializable, SupabaseTable("scores")]
+[Serializable, Preserve, SupabaseTable("scores")]
 public sealed class ScoreRow
 {
-    [SupabaseColumn("id")] public long Id { get; set; }
-    [SupabaseColumn("player_name")] public string PlayerName { get; set; }
-    [SupabaseColumn("score")] public int Score { get; set; }
+    [Preserve, SupabaseColumn("id")] public long Id { get; set; }
+    [Preserve, SupabaseColumn("player_name")] public string PlayerName { get; set; }
+    [Preserve, SupabaseColumn("score")] public int Score { get; set; }
 }
 ```
 
@@ -160,28 +164,23 @@ error. Files for removed tables stay in the output folder for manual review.
 
 ## Verification and platform boundaries
 
-The local verification for 0.8.0 covers the following boundaries. A successful build
-does not establish live service behavior on a device.
+All three listed Editors passed 193 EditMode tests each. The isolated Supabase stack passed
+three PlayMode scenarios covering the five services and two-user access policies.
 
 | Target | Recorded verification |
 | --- | --- |
 | Unity 2021.3.45f2 Editor | EditMode suite and documentation example compilation |
 | Unity 2022.3.62f2 Editor | EditMode suite and documentation example compilation |
 | Unity 6000.6.7f1 Editor | EditMode suite and clean `.unitypackage` import/compilation |
-| WebGL | Smoke player build from the clean package import |
-| Windows | Smoke player build from the clean package import |
+| WebGL | Smoke build and startup in Chromium |
+| Windows x64 | Smoke build and separate IL2CPP model deserialization check with Medium stripping |
 | Android | Smoke player build from the clean package import |
-| iOS | Unity Xcode project export; Xcode compilation, signing, and hardware execution remain separate |
+| iOS | Unity Xcode project export |
 | Linux x64 | Mono smoke player cross-built on Windows from the clean package import |
 | macOS players | No recorded player check |
 | Consoles | Unsupported |
 
-For 0.6.0, separate loopback checks exercised WebSocket echo, remote close, connection cancellation,
-and file storage in headless Windows and Linux x64 Mono players. The Linux run used Ubuntu
-on WSL2. The WebGL smoke player loaded in Chromium. A separate browser fixture exercised
-callback URL cleanup, browser storage, and the WebSocket bridge. An EditMode test simulated focus return and verified session refresh.
-These results cover the listed behaviors with fixtures. Android and iOS device behavior
-and live Supabase service behavior require separate checks.
+See the platform notes for the test environment, earlier runtime checks, and device coverage.
 
 The package uses `UnityWebRequest` for HTTP, browser WebSockets on WebGL, and native
 WebSockets elsewhere. See [platform notes](Packages/com.supabaseunity.client/Documentation~/platforms.md)
@@ -199,7 +198,7 @@ with the package/Unity version, OS or device, exercised services, and sanitized 
 ## Security and session storage
 
 Elevated client keys are rejected, credentialed requests do not follow redirects, and
-SDK errors redact keys and tokens. These safeguards do not replace your application's
+SDK errors redact recognized credential patterns. These safeguards do not replace your application's
 database grants, RLS, Storage policies, or Edge Function authorization.
 
 Session persistence is off by default. Read the
@@ -216,6 +215,8 @@ Do not include credentials in issues or logs.
 - [API guide](Packages/com.supabaseunity.client/Documentation~/api.md)
 - [Editor scripting](Packages/com.supabaseunity.client/Documentation~/editor-scripting.md)
 - [Troubleshooting](Packages/com.supabaseunity.client/Documentation~/troubleshooting.md)
+- [Runtime lifecycle](Packages/com.supabaseunity.client/Documentation~/runtime-lifecycle.md)
+- [Service compatibility](Packages/com.supabaseunity.client/Documentation~/service-compatibility.md)
 - [Platform notes](Packages/com.supabaseunity.client/Documentation~/platforms.md)
 - [Session storage](Packages/com.supabaseunity.client/Documentation~/session-storage.md)
 - [Security model](Packages/com.supabaseunity.client/Documentation~/security.md)

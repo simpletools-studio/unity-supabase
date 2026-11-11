@@ -3,7 +3,7 @@
 An independent Supabase client for Unity 2021.3 and newer. The package provides Auth,
 Database, Realtime, Storage and Edge Functions APIs for WebGL, desktop and mobile projects.
 
-> `0.8.0` cancels pending work during shutdown and respects manual Realtime disconnects. See [runtime lifecycle](Documentation~/runtime-lifecycle.md) for ownership and retry behavior.
+> `0.8.0` cancels pending work during shutdown, keeps Realtime closed after a manual disconnect, and preserves generated model properties in IL2CPP builds. Regenerate older models or add preservation annotations to their properties. [Model preservation guide](Documentation~/api.md#model-preservation-in-il2cpp-builds)
 
 ## Installation
 
@@ -15,7 +15,7 @@ https://github.com/DorukTan/unity-supabase.git?path=/Packages/com.supabaseunity.
 ```
 
 Release tarballs and `.unitypackage` files are available on the
-[GitHub Releases page](https://github.com/DorukTan/unity-supabase/releases). When importing the
+[GitHub Releases page](https://github.com/simpletools-studio/unity-supabase/releases). When importing the
 `.unitypackage`, install `com.unity.nuget.newtonsoft-json` 3.2.1 or newer first. Do not install
 the `.unitypackage` alongside the UPM distribution.
 
@@ -35,8 +35,7 @@ then press Play. Opening the scene prompts to save modified scenes and is disabl
 The `.unitypackage` distribution includes the same sample at
 `Assets/SupabaseUnity/Samples/Quickstart`.
 
-Never put an `sb_secret_...` key, `service_role` key, database password or management token in
-a Unity project. Player builds are public clients and must be protected with Row Level
+Keep elevated credentials out of Unity settings, scripts, assets, and builds. Enter a Supabase secret API key only in the Model Generator’s temporary Editor field. Player builds are public clients and must be protected with Row Level
 Security, Storage policies and server-side authorization.
 
 ## Generate C# models
@@ -60,6 +59,7 @@ using System;
 using System.Threading;
 using Supabase.Unity;
 using UnityEngine;
+using UnityEngine.Scripting;
 
 public sealed class Leaderboard : MonoBehaviour
 {
@@ -117,12 +117,12 @@ public sealed class Leaderboard : MonoBehaviour
     }
 }
 
-[Serializable, SupabaseTable("scores")]
+[Serializable, Preserve, SupabaseTable("scores")]
 public sealed class ScoreRow
 {
-    [SupabaseColumn("id")] public long Id { get; set; }
-    [SupabaseColumn("player_name")] public string PlayerName { get; set; }
-    [SupabaseColumn("score")] public int Score { get; set; }
+    [Preserve, SupabaseColumn("id")] public long Id { get; set; }
+    [Preserve, SupabaseColumn("player_name")] public string PlayerName { get; set; }
+    [Preserve, SupabaseColumn("score")] public int Score { get; set; }
 }
 ```
 
@@ -151,6 +151,8 @@ thread. Use `await` or the provided coroutine bridge.
 - [Troubleshooting](Documentation~/troubleshooting.md)
 - [API guide](Documentation~/api.md)
 - [Editor scripting](Documentation~/editor-scripting.md)
+- [Runtime lifecycle](Documentation~/runtime-lifecycle.md)
+- [Service compatibility](Documentation~/service-compatibility.md)
 - [Platform notes](Documentation~/platforms.md)
 - [Session storage](Documentation~/session-storage.md)
 - [Security model](Documentation~/security.md)
@@ -159,7 +161,7 @@ thread. Use `await` or the provided coroutine bridge.
 - [Changelog](CHANGELOG.md)
 
 The main repository contains the complete
-[support and contribution policies](https://github.com/DorukTan/unity-supabase).
+[support and contribution policies](https://github.com/simpletools-studio/unity-supabase).
 
 MIT licensed. This project is not affiliated with or endorsed by Supabase, Inc. or Unity
 Technologies.

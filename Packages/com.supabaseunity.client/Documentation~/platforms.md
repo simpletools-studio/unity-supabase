@@ -33,8 +33,8 @@
 | Target | Recorded check | Further coverage |
 | --- | --- | --- |
 | Unity Editor on Windows | EditMode tests on 2021.3.45f2, 2022.3.62f2, and 6000.6.7f1. Clean archive import on 6000.6.7f1. | Editor tests on Linux and macOS. |
-| WebGL | Smoke player build. | Browser integration and live service coverage vary by behavior. |
-| Windows x64 | Smoke player build. Separate IL2CPP model probe with Medium managed stripping on Unity 6000.6.7f1. | Long-running native network and hosted-project checks. |
+| WebGL | Smoke player build and startup in Chromium 151.0.7922.34. | Browser service operations, authentication callbacks, and persistence. |
+| Windows x64 | Smoke player build. An IL2CPP player on Unity 6000.6.7f1 deserialized generated and handwritten models with Medium managed stripping. | Long-running native network and hosted-project checks. |
 | Linux x64 | Mono smoke player cross-built from the clean archive on Windows. | Linux Editor, desktop player, and live service coverage. |
 | macOS | No recorded player check. | Player build and execution. |
 | Android | Smoke APK build. | Device testing, including background and resume. |
