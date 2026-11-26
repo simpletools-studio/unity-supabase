@@ -1,5 +1,15 @@
 # Changelog
 
+## [Unreleased]
+
+### Changed
+
+- Point package metadata, installation URLs, Setup links, and issue templates at the canonical `simpletools-studio/unity-supabase` repository.
+
+### Upgrade notes
+
+- Git installations from earlier releases use a redirected URL. Replace it in `Packages/manifest.json` with the canonical URL from the README.
+
 ## [0.9.0] - 2026-11-11
 
 ### Fixed

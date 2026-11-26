@@ -8,7 +8,7 @@ their API and support boundaries may change.
 
 ## Reporting a vulnerability
 
-Do not open a public issue containing credentials, user data, exploit details or an unpatched vulnerability. Use the repository's [private vulnerability reporting](https://github.com/DorukTan/unity-supabase/security/advisories/new) instead.
+Do not open a public issue containing credentials, user data, exploit details or an unpatched vulnerability. Use the repository's [private vulnerability reporting](https://github.com/simpletools-studio/unity-supabase/security/advisories/new) instead.
 
 Never send a live Supabase secret, service-role key, user JWT or refresh token. If a credential may have been exposed, rotate or revoke it in Supabase immediately before reporting the underlying SDK issue.
 

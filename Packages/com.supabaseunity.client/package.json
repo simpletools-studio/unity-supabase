@@ -5,12 +5,12 @@
   "description": "A Unity-first Supabase client for WebGL, desktop and mobile platforms.",
   "unity": "2021.3",
   "license": "MIT",
-  "documentationUrl": "https://github.com/DorukTan/unity-supabase/tree/v0.9.0/Packages/com.supabaseunity.client/Documentation~",
-  "changelogUrl": "https://github.com/DorukTan/unity-supabase/blob/v0.9.0/Packages/com.supabaseunity.client/CHANGELOG.md",
-  "licensesUrl": "https://github.com/DorukTan/unity-supabase/blob/v0.9.0/Packages/com.supabaseunity.client/LICENSE.md",
+  "documentationUrl": "https://github.com/simpletools-studio/unity-supabase/tree/v0.9.0/Packages/com.supabaseunity.client/Documentation~",
+  "changelogUrl": "https://github.com/simpletools-studio/unity-supabase/blob/v0.9.0/Packages/com.supabaseunity.client/CHANGELOG.md",
+  "licensesUrl": "https://github.com/simpletools-studio/unity-supabase/blob/v0.9.0/Packages/com.supabaseunity.client/LICENSE.md",
   "repository": {
     "type": "git",
-    "url": "https://github.com/DorukTan/unity-supabase.git"
+    "url": "https://github.com/simpletools-studio/unity-supabase.git"
   },
   "dependencies": {
     "com.unity.modules.unitywebrequest": "1.0.0",
@@ -26,7 +26,7 @@
   ],
   "author": {
     "name": "SimpleTools",
-    "url": "https://github.com/DorukTan/unity-supabase/graphs/contributors"
+    "url": "https://github.com/simpletools-studio/unity-supabase/graphs/contributors"
   },
   "samples": [
     {

@@ -135,7 +135,7 @@ def main() -> int:
     parser.add_argument("--version", default=package_version())
     parser.add_argument(
         "--repository",
-        default=os.environ.get("GITHUB_REPOSITORY", "DorukTan/unity-supabase"),
+        default=os.environ.get("GITHUB_REPOSITORY", "simpletools-studio/unity-supabase"),
     )
     parser.add_argument("--verification", type=Path, default=DEFAULT_VERIFICATION)
     parser.add_argument("--output", type=Path, required=True)

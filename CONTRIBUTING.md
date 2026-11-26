@@ -18,7 +18,7 @@ Open the project in Unity and use **Window > General > Test Runner > EditMode > 
 from the command line:
 
 ```bash
-"C:/Program Files/Unity/Hub/Editor/6000.4.8f1/Editor/Unity.exe" -runTests -batchmode -projectPath . -testPlatform EditMode -testResults TestResults.xml -logFile -
+"C:/Program Files/Unity/Hub/Editor/6000.6.7f1/Editor/Unity.exe" -runTests -batchmode -projectPath . -testPlatform EditMode -testResults TestResults.xml -logFile -
 ```
 
 Use the editor version in `ProjectSettings/ProjectVersion.txt`. Unity holds an exclusive lock
