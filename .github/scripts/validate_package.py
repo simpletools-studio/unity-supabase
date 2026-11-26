@@ -21,6 +21,10 @@ PINNED_ACTION_PATTERN = re.compile(r"^[^@]+@[0-9a-f]{40}$")
 PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
 DEFAULT_RELEASE_VERIFICATION = ROOT / ".github" / "release-verification.json"
 SHA256_PATTERN = re.compile(r"^[0-9a-f]{64}$")
+REPOSITORY_URL = "https://github.com/simpletools-studio/unity-supabase"
+# The retired owner only redirects; if the name is re-registered, links and Git UPM
+# installs would resolve to someone else's repository. Split so this file passes its own scan.
+RETIRED_REPOSITORY_PATTERN = re.compile(r"\bdoruktan" r"/unity-supabase(?![\w-])", re.I)
 
 LIVE_CREDENTIAL_PATTERNS = {
     "Supabase API key": re.compile(r"sb_(?:secret|publishable)_[A-Za-z0-9_-]{20,}"),
@@ -100,8 +104,13 @@ def validate_package_manifest() -> str:
     for field in ("documentationUrl", "changelogUrl", "licensesUrl"):
         if expected_tag not in manifest.get(field, ""):
             fail(f"package.json {field} must point at immutable tag {expected_tag}")
+    urls = [manifest.get(field, "") for field in ("documentationUrl", "changelogUrl", "licensesUrl")]
+    urls += [manifest.get("repository", {}).get("url", ""), manifest.get("author", {}).get("url", "")]
+    for url in urls:
+        if not url.startswith(f"{REPOSITORY_URL}/") and url != f"{REPOSITORY_URL}.git":
+            fail(f"package.json URL must use the canonical repository {REPOSITORY_URL}: {url}")
     expected_install = (
-        "https://github.com/DorukTan/unity-supabase.git"
+        f"{REPOSITORY_URL}.git"
         f"?path=/Packages/com.supabaseunity.client#{expected_tag}"
     )
     for path in (ROOT / "README.md", PACKAGE / "README.md", PACKAGE / "README.tr.md"):
@@ -156,6 +165,8 @@ def validate_credentials_and_text(
         for label, pattern in LIVE_CREDENTIAL_PATTERNS.items():
             if pattern.search(text):
                 fail(f"Possible live {label} found in {relative}")
+        if RETIRED_REPOSITORY_PATTERN.search(text):
+            fail(f"Retired repository owner referenced in {relative}; use {REPOSITORY_URL}")
         if check_trailing_whitespace:
             for line_number, line in enumerate(text.splitlines(), start=1):
                 if line.rstrip(" \t") != line:

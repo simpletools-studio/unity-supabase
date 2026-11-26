@@ -11,7 +11,7 @@ Install one distribution in each Unity project. A UPM install and an Assets impo
 ## Upgrade an existing project
 
 1. Save your scenes and create a version-control checkpoint or backup with the `.meta` files. Keep project settings assets and handwritten code in your own folders under `Assets`.
-2. For Git, replace the existing version tag with the new release tag. For a tarball install, select the new `.tgz` in Package Manager. For an Assets install, import the newer `.unitypackage` into the existing project.
+2. For Git, replace the existing version tag with the new release tag. Releases before 0.10.0 published a Git URL under the maintainer's original personal account. That URL currently redirects. Check the `com.supabaseunity.client` entry in `Packages/manifest.json`, and replace any URL not under `https://github.com/simpletools-studio/unity-supabase.git` with the canonical URL from the [package README](../README.md). For a tarball install, select the new `.tgz` in Package Manager. For an Assets install, import the newer `.unitypackage` into the existing project.
 3. After Unity finishes compiling, open **Tools > Supabase > Setup** and select your existing settings asset. Confirm its URL, schema and runtime options, then run **Test Project Connection**.
 4. Open the scene or prefab that owns your client and confirm it still references the settings asset.
 5. If you use IL2CPP, regenerate models created before 0.8.0 or preserve the reflected properties manually. Review the preview before applying updates. [Model preservation](api.md#model-preservation-in-il2cpp-builds)
@@ -34,7 +34,7 @@ Inspect the first compiler error if Unity reports duplicate assembly or type nam
 
 Git bağlantısını veya `.tgz` dosyasını Package Manager üzerinden ekle. UPM, Json.NET bağımlılığını çözer. `.unitypackage` kullanıyorsan önce `com.unity.nuget.newtonsoft-json` 3.2.1 veya daha yeni bir sürüm kur. Ardından **Assets > Import Package > Custom Package** seçeneğiyle paketi içe aktar.
 
-Yükseltmeden önce sahneleri kaydet ve `.meta` dosyalarıyla birlikte bir yedek veya sürüm kontrolü kaydı oluştur. Git etiketini değiştir, yeni `.tgz` dosyasını ekle veya yeni `.unitypackage` dosyasını mevcut projeye aktar. Unity derlemeyi bitirdiğinde **Tools > Supabase > Setup** ekranında mevcut ayar dosyanı seç. Sahne ve prefab bağlantılarını kontrol et.
+Yükseltmeden önce sahneleri kaydet ve `.meta` dosyalarıyla birlikte bir yedek veya sürüm kontrolü kaydı oluştur. Git etiketini değiştir. 0.10.0 öncesi sürümler Git bağlantısında bakımcının eski kişisel hesabını kullanıyordu ve bu bağlantı şu an yönlendirmeyle çalışıyor. `Packages/manifest.json` içindeki `com.supabaseunity.client` bağlantısı `https://github.com/simpletools-studio/unity-supabase.git` adresinde değilse README'deki bağlantıyla değiştir. Ya da yeni `.tgz` dosyasını ekle veya yeni `.unitypackage` dosyasını mevcut projeye aktar. Unity derlemeyi bitirdiğinde **Tools > Supabase > Setup** ekranında mevcut ayar dosyanı seç. Sahne ve prefab bağlantılarını kontrol et.
 
 IL2CPP kullanıyorsan 0.8.0 öncesinde üretilen modelleri yeniden üret veya özelliklerine koruma özniteliklerini ekle. Değişiklikleri yazmadan önce önizlemeyi incele. [Model koruma rehberi](api.md#model-preservation-in-il2cpp-builds)
 
